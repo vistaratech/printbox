@@ -39,11 +39,11 @@ const upload = multer({
 });
 
 /**
- * Fast helper to estimate page count from PDF buffer
+ * Non-blocking PDF page counter using async file read
  */
-function estimatePdfPages(filePath: string): number {
+async function estimatePdfPages(filePath: string): Promise<number> {
   try {
-    const buffer = fs.readFileSync(filePath);
+    const buffer = await fs.promises.readFile(filePath);
     const content = buffer.toString('latin1');
     const matches = content.match(/\/Type\s*\/Page[^s]/g);
     return matches && matches.length > 0 ? matches.length : 1;
@@ -54,9 +54,9 @@ function estimatePdfPages(filePath: string): number {
 
 /**
  * POST /api/upload
- * Handles document upload
+ * Handles document upload with async page detection
  */
-router.post('/', upload.single('file'), (req: Request, res: Response) => {
+router.post('/', upload.single('file'), async (req: Request, res: Response) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
   }
@@ -65,11 +65,11 @@ router.post('/', upload.single('file'), (req: Request, res: Response) => {
   let detectedPages = 1;
 
   if (ext === '.pdf') {
-    detectedPages = estimatePdfPages(req.file.path);
+    detectedPages = await estimatePdfPages(req.file.path);
   } else if (/^\.(jpe?g|png|webp)$/i.test(ext)) {
     detectedPages = 1;
   } else {
-    // For DOCX/PPTX, default estimate is 5-10 pages (client can override if needed)
+    // For DOCX/PPTX, default estimate (client can override)
     detectedPages = 5;
   }
 
@@ -77,16 +77,26 @@ router.post('/', upload.single('file'), (req: Request, res: Response) => {
     id: path.basename(req.file.filename, ext),
     originalName: req.file.originalname,
     fileName: req.file.filename,
-    filePath: req.file.path,
+    filePath: req.file.path, // Keep internally but...
     fileSize: req.file.size,
     mimeType: req.file.mimetype,
     detectedPages,
     createdAt: new Date().toISOString()
   };
 
+  // Return safe response WITHOUT exposing server filesystem paths
   return res.status(201).json({
     success: true,
-    file: fileInfo
+    file: {
+      id: fileInfo.id,
+      originalName: fileInfo.originalName,
+      fileName: fileInfo.fileName,
+      downloadUrl: `/uploads/${fileInfo.fileName}`,
+      fileSize: fileInfo.fileSize,
+      mimeType: fileInfo.mimeType,
+      detectedPages: fileInfo.detectedPages,
+      createdAt: fileInfo.createdAt
+    }
   });
 });
 

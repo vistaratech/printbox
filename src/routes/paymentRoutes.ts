@@ -10,13 +10,17 @@ const router = Router();
  */
 router.post('/create-order', (req: Request, res: Response) => {
   const { jobCode } = req.body;
-  if (!jobCode) {
+  if (!jobCode || typeof jobCode !== 'string') {
     return res.status(400).json({ error: 'jobCode is required' });
   }
 
   const job = JobService.getJob(jobCode.toUpperCase());
   if (!job) {
     return res.status(404).json({ error: 'Job not found' });
+  }
+
+  if (job.status !== 'pending_payment') {
+    return res.status(409).json({ error: 'Payment already processed for this job', status: job.status });
   }
 
   // Standard NPCI UPI URI Scheme
@@ -37,10 +41,11 @@ router.post('/create-order', (req: Request, res: Response) => {
 /**
  * POST /api/payments/verify
  * Confirm payment and trigger print job progression
+ * CRITICAL: Guards against double-spend (idempotent)
  */
 router.post('/verify', (req: Request, res: Response) => {
   const { jobCode, paymentId, autoSimulate } = req.body;
-  if (!jobCode) {
+  if (!jobCode || typeof jobCode !== 'string') {
     return res.status(400).json({ error: 'jobCode is required' });
   }
 
@@ -49,11 +54,19 @@ router.post('/verify', (req: Request, res: Response) => {
     return res.status(404).json({ error: 'Job not found' });
   }
 
-  // 1. Mark as Paid
+  // Prevent double-payment: if already paid, return current state
+  if (job.status !== 'pending_payment') {
+    return res.json({
+      success: true,
+      message: 'Payment was already verified',
+      job
+    });
+  }
+
+  // Mark as Paid (JobService also guards internally)
   const updatedJob = JobService.markPaid(job.jobCode, paymentId);
 
-  // If autoSimulate is true (or demo mode without external kiosk running),
-  // simulate the printing progression automatically with realistic delays
+  // If autoSimulate: simulate printing with tracked timers
   if (autoSimulate !== false) {
     simulatePrintingFlow(job.jobCode);
   }
@@ -66,32 +79,41 @@ router.post('/verify', (req: Request, res: Response) => {
 });
 
 /**
- * Helper to simulate printer step progress if physical hardware is not attached
+ * Simulate printer progress with TRACKED timers (clearable on shutdown)
  */
 function simulatePrintingFlow(jobCode: string) {
-  setTimeout(() => {
+  const t1 = setTimeout(() => {
     JobService.updateStatus(jobCode, 'sending_to_machine', 'Sending file to the machine…');
   }, 1200);
+  JobService.trackSimulationTimer(jobCode, t1);
 
-  setTimeout(() => {
+  const t2 = setTimeout(() => {
     const job = JobService.getJob(jobCode);
-    const totalSheets = job?.totalPhysicalPages || 1;
+    if (!job || job.status === 'completed' || job.status === 'failed') return;
+
+    const totalSheets = job.totalPhysicalPages || 1;
     JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', 0);
 
-    // Increment pages one by one
     let current = 0;
     const intervalTime = Math.max(100, Math.floor(3000 / totalSheets));
     const interval = setInterval(() => {
       current++;
+      const currentJob = JobService.getJob(jobCode);
+      if (!currentJob || currentJob.status === 'completed' || currentJob.status === 'failed') {
+        clearInterval(interval);
+        return;
+      }
       JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', current);
       if (current >= totalSheets) {
         clearInterval(interval);
-        setTimeout(() => {
+        const t3 = setTimeout(() => {
           JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages 🎉', totalSheets);
         }, 800);
+        JobService.trackSimulationTimer(jobCode, t3);
       }
     }, intervalTime);
   }, 2600);
+  JobService.trackSimulationTimer(jobCode, t2);
 }
 
 export default router;

@@ -1,6 +1,8 @@
 import { MachineInfo } from '../types';
 import { config } from '../config';
 
+const STALE_THRESHOLD_MS = 90 * 1000; // 90 seconds without heartbeat → offline
+
 export class MachineService {
   private static machines: Map<string, MachineInfo> = new Map();
 
@@ -18,12 +20,23 @@ export class MachineService {
     });
   }
 
+  /**
+   * Check if a machine's heartbeat is stale and update isOnline accordingly
+   */
+  private static refreshOnlineStatus(machine: MachineInfo): MachineInfo {
+    const elapsed = Date.now() - new Date(machine.lastHeartbeat).getTime();
+    machine.isOnline = elapsed < STALE_THRESHOLD_MS;
+    return machine;
+  }
+
   public static getMachine(id: string): MachineInfo | undefined {
-    return this.machines.get(id);
+    const machine = this.machines.get(id);
+    if (machine) this.refreshOnlineStatus(machine);
+    return machine;
   }
 
   public static getAllMachines(): MachineInfo[] {
-    return Array.from(this.machines.values());
+    return Array.from(this.machines.values()).map(m => this.refreshOnlineStatus(m));
   }
 
   public static updateHeartbeat(id: string, paperRemaining?: number, tonerPercent?: number): MachineInfo {
@@ -45,8 +58,8 @@ export class MachineService {
 
     machine.isOnline = true;
     machine.lastHeartbeat = new Date().toISOString();
-    if (paperRemaining !== undefined) machine.paperRemaining = paperRemaining;
-    if (tonerPercent !== undefined) machine.tonerLevelPercent = tonerPercent;
+    if (paperRemaining !== undefined) machine.paperRemaining = Math.max(0, Math.floor(paperRemaining));
+    if (tonerPercent !== undefined) machine.tonerLevelPercent = Math.max(0, Math.min(100, Math.floor(tonerPercent)));
 
     return machine;
   }

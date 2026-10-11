@@ -8,7 +8,7 @@ const router = Router();
 
 /**
  * POST /api/jobs
- * Create a new print job
+ * Create a new print job (validation is done inside JobService.createJob)
  */
 router.post('/', (req: Request, res: Response) => {
   try {
@@ -24,17 +24,17 @@ router.post('/', (req: Request, res: Response) => {
 
     const fileInfo: UploadedFileInfo = {
       id: file.id || 'unknown',
-      originalName: file.originalName || 'document',
-      fileName: file.fileName,
+      originalName: String(file.originalName || 'document').slice(0, 255),
+      fileName: String(file.fileName).slice(0, 255),
       filePath: file.filePath || '',
-      fileSize: file.fileSize || 0,
-      mimeType: file.mimeType || 'application/octet-stream',
-      detectedPages: file.detectedPages || 1,
+      fileSize: Math.max(0, Number(file.fileSize) || 0),
+      mimeType: String(file.mimeType || 'application/octet-stream').slice(0, 100),
+      detectedPages: Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1))),
       createdAt: file.createdAt || new Date().toISOString()
     };
 
-    const targetMachineId = machineId || config.defaultMachineId;
-    const targetPaymentMethod = paymentMethod || 'gpay';
+    const targetMachineId = String(machineId || config.defaultMachineId).slice(0, 20);
+    const targetPaymentMethod = String(paymentMethod || 'gpay').slice(0, 20);
 
     const job = JobService.createJob(
       fileInfo,
@@ -57,7 +57,7 @@ router.post('/', (req: Request, res: Response) => {
  * Fetch single job details
  */
 router.get('/:jobCode', (req: Request, res: Response) => {
-  const jobCode = String(req.params.jobCode).toUpperCase();
+  const jobCode = String(req.params.jobCode).toUpperCase().slice(0, 20);
   const job = JobService.getJob(jobCode);
   if (!job) {
     return res.status(404).json({ error: 'Job not found' });
@@ -70,7 +70,7 @@ router.get('/:jobCode', (req: Request, res: Response) => {
  * Server-Sent Events (SSE) live stream for job updates
  */
 router.get('/:jobCode/stream', (req: Request, res: Response) => {
-  const jobCode = String(req.params.jobCode).toUpperCase();
+  const jobCode = String(req.params.jobCode).toUpperCase().slice(0, 20);
   const job = JobService.getJob(jobCode);
 
   if (!job) {
@@ -81,23 +81,36 @@ router.get('/:jobCode/stream', (req: Request, res: Response) => {
   res.writeHead(200, {
     'Content-Type': 'text/event-stream',
     'Cache-Control': 'no-cache',
-    'Connection': 'keep-alive'
+    'Connection': 'keep-alive',
+    'X-Accel-Buffering': 'no' // Disable nginx buffering for SSE
   });
 
   // Send initial data immediately
   res.write(`data: ${JSON.stringify(job)}\n\n`);
 
-  // Register client
-  SseService.addClient(jobCode, res);
+  // Register client (returns false if limits exceeded)
+  const added = SseService.addClient(jobCode, res);
+  if (!added) {
+    res.write(`data: ${JSON.stringify({ type: 'error', message: 'Too many connections. Try again.' })}\n\n`);
+    res.end();
+  }
 });
 
 /**
  * GET /api/jobs
- * List all jobs
+ * List jobs with pagination
  */
-router.get('/', (_req: Request, res: Response) => {
-  const jobs = JobService.getAllJobs();
-  return res.json({ success: true, jobs });
+router.get('/', (req: Request, res: Response) => {
+  const limit = Math.min(100, Math.max(1, Number(req.query.limit) || 50));
+  const offset = Math.max(0, Number(req.query.offset) || 0);
+  const jobs = JobService.getAllJobs(limit, offset);
+  return res.json({
+    success: true,
+    total: JobService.getJobCount(),
+    limit,
+    offset,
+    jobs
+  });
 });
 
 export default router;
