@@ -230,8 +230,12 @@ h1{font-size:24px;letter-spacing:-.8px}h2{font-size:34px;line-height:1;letter-sp
 
 <script>
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
-const D={file:null,pages:1,color:'bw',sides:'single',size:'A4',orient:'portrait',pps:1,quality:'normal',copies:1,range:'all',rt:'',staple:false,collate:true,pay:'gpay',step:1};
+const D={file:null,serverFile:null,pages:1,color:'bw',sides:'single',size:'A4',orient:'portrait',pps:1,quality:'normal',copies:1,range:'all',rt:'',staple:false,collate:true,pay:'gpay',step:1};
 let S={...D};
+const API_BASE=(window.location.protocol.startsWith('http'))?(window.location.origin+'/api'):'http://localhost:3000/api';
+let currentJob=null,currentEventSource=null;
+async function checkMachineStatus(){try{const r=await fetch(API_BASE+'/machines/M-01');if(r.ok){const d=await r.json();if(d.machine)$('.mach').innerHTML=`${d.machine.name}, ${d.machine.location}<br><b>${d.machine.isOnline?'Online':'Offline'}</b> · A4 paper: ${d.machine.paperRemaining} sheets`}}catch(e){}}
+checkMachineStatus();
 const money=x=>'₹'+x.toFixed(2);
 function count(){if(S.range!=='custom')return S.pages;const set=new Set();S.rt.split(',').forEach(p=>{const m=p.trim().match(/^(\d+)(?:-(\d+))?$/);if(!m)return;let a=+m[1],b=+(m[2]||m[1]);if(a>b)[a,b]=[b,a];for(let i=Math.max(a,1);i<=Math.min(b,S.pages);i++)set.add(i)});return set.size}
 function calc(){const n=count(),sheets=Math.ceil(n/S.pps),paper=(S.sides==='double'?Math.ceil(sheets/2):sheets)*S.copies;
@@ -300,18 +304,19 @@ function go(n){S.step=n;[1,2,3,4].forEach(i=>$('#s'+i).classList.toggle('hide',i
  $('#bk').classList.toggle('hide',n===1||n===4);$('#bar').classList.toggle('hide',n===4);
  $('#nx').textContent=n===3?'Pay '+money(calc().total):'Continue';$('#bl').textContent=n===3?'You pay':'Estimated total';
  upd();window.scrollTo({top:0,behavior:'smooth'})}
-async function onFile(f){TH={};pdfDoc=null;S.pl=S.img=null;const ext=f.name.split('.').pop().toLowerCase();let pg=1,note='Edit if this looks wrong';
+async function onFile(f){TH={};pdfDoc=null;S.pl=S.img=null;S.serverFile=null;const ext=f.name.split('.').pop().toLowerCase();let pg=1,note='Edit if this looks wrong';
  if(ext==='pdf'){const t=new TextDecoder('latin1').decode(await f.arrayBuffer());pg=(t.match(/\/Type\s*\/Page[^s]/g)||[]).length||1}
  else if(!/^(jpe?g|png|webp)$/.test(ext)){pg=10;note='Could not count pages. Please set it.'}
  S.file=f;S.pages=pg;$('#pgs').value=pg;$('#pgn').textContent=note;
  $('#fic').textContent=ext==='pdf'?'📕':/docx?/.test(ext)?'📘':/pptx?/.test(ext)?'📙':/jpe?g|png|webp/.test(ext)?'🖼️':'📄';
  $('#fnm').textContent=f.name;$('#fsz').textContent=(f.size/1048576>=1?(f.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(f.size/1024))+' KB');
- $('#dz').classList.add('hide');$('#fcard').classList.remove('hide');upd()}
+ $('#dz').classList.add('hide');$('#fcard').classList.remove('hide');upd();
+ try{const fd=new FormData();fd.append('file',f);fetch(API_BASE+'/upload',{method:'POST',body:fd}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.file)S.serverFile=d.file}).catch(()=>{})}catch(x){}}
 $('#fi').onchange=e=>e.target.files[0]&&onFile(e.target.files[0]);
 const dz=$('#dz');['dragover','dragenter'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.add('over')}));
 ['dragleave','drop'].forEach(v=>dz.addEventListener(v,e=>{e.preventDefault();dz.classList.remove('over')}));
 dz.addEventListener('drop',e=>e.dataTransfer.files[0]&&onFile(e.dataTransfer.files[0]));
-$('#fx').onclick=()=>{S.file=null;$('#fi').value='';$('#dz').classList.remove('hide');$('#fcard').classList.add('hide');upd()};
+$('#fx').onclick=()=>{S.file=null;S.serverFile=null;$('#fi').value='';$('#dz').classList.remove('hide');$('#fcard').classList.add('hide');upd()};
 $$('.seg').forEach(g=>g.onclick=e=>{const b=e.target.closest('button');if(!b)return;g.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));const k=g.dataset.k;S[k]=k==='pps'?+b.dataset.v:b.dataset.v;upd();bump()});
 $$('[data-t]').forEach(b=>b.onclick=()=>{const k=b.dataset.t;S[k]=!S[k];b.classList.toggle('on',S[k]);b.setAttribute('aria-checked',S[k]);upd()});
 $$('[data-pg]').forEach(b=>b.onclick=()=>{S.pages=Math.min(500,Math.max(1,S.pages+ +b.dataset.pg));$('#pgs').value=S.pages;upd()});
@@ -324,8 +329,27 @@ $('#bk').onclick=()=>go(S.step-1);
 $('#nx').onclick=()=>S.step===3?run():go(S.step+1);
 $('#th').onclick=()=>{const r=document.documentElement,d=getComputedStyle(r).getPropertyValue('--bg').trim()==='#100c1f';r.dataset.theme=d?'light':'dark'};
 const ST=['Payment received','File sent to the machine','Printing your pages','Ready in the tray'];
-function run(){go(4);$('#jc').textContent='PB-'+Math.floor(1000+Math.random()*9000);$('#done').classList.add('hide');$('#again').classList.add('hide');
+async function run(){go(4);$('#done').classList.add('hide');$('#again').classList.add('hide');
  const draw=k=>{$('#stl').innerHTML=ST.map((t,i)=>'<div class="st '+(i<k?'ok':i===k?'go':'')+'"><span class="d">'+(i<k?'✓':'')+'</span>'+t+'</div>').join('');$('#pb').style.width=(k/ST.length*100)+'%';$('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));ctr(k)};
+ if(currentEventSource){currentEventSource.close();currentEventSource=null}
+ try{
+  const fp=S.serverFile||{fileName:S.file?S.file.name:'doc.pdf',originalName:S.file?S.file.name:'doc.pdf',fileSize:S.file?S.file.size:0,detectedPages:S.pages};
+  const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:S.range,rangeText:S.rt,staple:S.staple,collate:S.collate},machineId:'M-01',paymentMethod:S.pay})});
+  if(r.ok){
+   const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
+   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:true})});
+   const es=new EventSource(API_BASE+'/jobs/'+currentJob.jobCode+'/stream');currentEventSource=es;
+   es.onmessage=e=>{try{
+    const j=JSON.parse(e.data);
+    const sm={'payment_received':0,'sending_to_machine':1,'printing':2,'completed':4};
+    const sidx=sm[j.status]!==undefined?sm[j.status]:1;draw(sidx);
+    if(j.status==='printing'){$('#pcnt').textContent=(j.printedPages||0)+' of '+j.totalPhysicalPages+' pages'}
+    if(j.status==='completed'){$('#done').classList.remove('hide');$('#again').classList.remove('hide');es.close();checkMachineStatus()}
+   }catch(x){}};
+   es.onerror=()=>es.close();return;
+  }
+ }catch(x){}
+ $('#jc').textContent='PB-'+Math.floor(1000+Math.random()*9000);
  let k=0;draw(0);const T=[1300,1300,3600,1200],nx=()=>setTimeout(()=>{k++;draw(k);if(k>=ST.length){$('#done').classList.remove('hide');$('#again').classList.remove('hide')}else nx()},T[k]);nx()}
 $('#again').onclick=()=>{S={...D};$('#fx').click();$$('.seg').forEach(g=>g.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',b.dataset.v===String(D[g.dataset.k]))));$('#cp').value=1;$('#rt').value='';$$('[data-t]').forEach(b=>{b.classList.toggle('on',D[b.dataset.t]);b.setAttribute('aria-checked',D[b.dataset.t])});go(1)};
 go(1);
