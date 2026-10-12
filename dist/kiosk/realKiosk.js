@@ -41,7 +41,7 @@ async function findBestPhysicalPrinter() {
         return undefined;
     }
 }
-const API_BASE = process.env.API_URL || `http://localhost:${config_1.config.port}/api`;
+const API_BASE = process.env.API_URL || 'https://printbox-p5i8.onrender.com/api';
 const MACHINE_ID = process.env.MACHINE_ID || config_1.config.defaultMachineId;
 // Target printer name (leave empty to automatically auto-detect physical printer or use default)
 let TARGET_PRINTER = process.env.PRINTER_NAME || undefined;

@@ -39,7 +39,7 @@ async function findBestPhysicalPrinter(): Promise<string | undefined> {
   }
 }
 
-const API_BASE = process.env.API_URL || `http://localhost:${config.port}/api`;
+const API_BASE = process.env.API_URL || 'https://printbox-p5i8.onrender.com/api';
 const MACHINE_ID = process.env.MACHINE_ID || config.defaultMachineId;
 
 // Target printer name (leave empty to automatically auto-detect physical printer or use default)
