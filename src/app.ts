@@ -63,9 +63,13 @@ app.use('/api/payments', paymentLimiter);
 // ── Serve uploaded files (only the uploads dir, NOT the project root) ──
 app.use('/uploads', express.static(config.uploadDir, { maxAge: '1h' }));
 
-// ── Serve ONLY index.html as the frontend (NOT the entire project root) ──
+// ── Serve index.html and sticker.html ──
 app.get('/', (_req: Request, res: Response) => {
   res.sendFile(path.resolve(process.cwd(), 'index.html'));
+});
+
+app.get('/sticker', (_req: Request, res: Response) => {
+  res.sendFile(path.resolve(process.cwd(), 'sticker.html'));
 });
 
 // Health check endpoint
