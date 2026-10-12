@@ -2,12 +2,13 @@ import app from './app';
 import { config } from './config';
 import { JobService } from './services/jobService';
 
-const server = app.listen(config.port, () => {
+const PORT = parseInt(process.env.PORT || String(config.port), 10);
+
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('====================================================');
-  console.log(`🖨️  PrintBox Backend API running at http://localhost:${config.port}`);
+  console.log(`🖨️  PrintBox Backend API running on port ${PORT}`);
   console.log(`📁 Uploads directory: ${config.uploadDir}`);
-  console.log(`🌐 Web App URL:      http://localhost:${config.port}`);
-  console.log(`🩺 Health check:     http://localhost:${config.port}/api/health`);
+  console.log(`🩺 Health check:     /api/health`);
   console.log(`⚙️  Default Machine:  ${config.defaultMachineId} (${config.defaultMachineLocation})`);
   console.log(`🛡️  Rate Limiting:    Enabled`);
   console.log(`🔒 Helmet Security:  Enabled`);

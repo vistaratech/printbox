@@ -1,6 +1,6 @@
 export type ColorMode = 'bw' | 'color';
 export type SidesMode = 'single' | 'double';
-export type PaperSize = 'A4' | 'A3' | 'Legal';
+export type PaperSize = 'A4' | 'A3' | 'A5' | 'Legal';
 export type Orientation = 'portrait' | 'landscape';
 export type Quality = 'draft' | 'normal' | 'high';
 export type PagesPerSheet = 1 | 2 | 4 | 6;

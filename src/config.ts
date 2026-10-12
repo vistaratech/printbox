@@ -17,8 +17,9 @@ export const config = {
     sizeMultipliers: {
       A4: 1.0,
       A3: 2.0,
+      A5: 0.8,
       Legal: 1.2
-    },
+    } as Record<string, number>,
     doubleSideDiscountMultiplier: 0.9, // 10% discount on double sided printing
     highQualityExtra: 0.5, // Rs 0.50 extra per page
     stapleRatePerCopy: 2.0 // Rs 2 per copy for stapling

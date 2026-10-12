@@ -23,9 +23,7 @@ app.use(morgan(config.nodeEnv === 'production' ? 'combined' : 'dev'));
 
 // ── CORS – restrict in production ──
 app.use(cors({
-  origin: config.nodeEnv === 'production'
-    ? ['https://printbox.vistaratech.com'] // add your production domain
-    : true, // allow all origins in dev
+  origin: true, // Allow all origins — kiosk agent connects from local machine
   methods: ['GET', 'POST'],
   allowedHeaders: ['Content-Type']
 }));

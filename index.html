@@ -130,9 +130,17 @@ h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;backgrou
 .proof::before,.proof::after{content:"";position:absolute;width:14px;height:14px;border:solid #16112b;opacity:.5}
 .proof::before{top:8px;left:8px;border-width:2px 0 0 2px}.proof::after{bottom:8px;right:8px;border-width:0 2px 2px 0}
 .proof p{color:#16112b;font-size:13px}.proof p b{display:block;font-size:16px;margin-bottom:2px}
-.sheet{background:var(--pp);width:96px;aspect-ratio:1/1.414;border:2px solid #16112b;border-radius:4px;box-shadow:3px 3px 0 #16112b;padding:7px;transition:transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .35s;flex:none;overflow:hidden;transform-style:preserve-3d}
+.sheet{background:var(--pp);width:96px;aspect-ratio:1/1.414;border:2px solid #16112b;border-radius:4px;box-shadow:3px 3px 0 #16112b;padding:7px;transition:width .3s ease,aspect-ratio .3s ease,transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .35s;flex:none;overflow:hidden;transform-style:preserve-3d}
 .sheet.flipping{animation:flip-sheet .4s cubic-bezier(.3,1.3,.5,1)}
 .sheet.landscape{width:136px;aspect-ratio:1.414/1}
+.sheet.sz-a5{width:76px;aspect-ratio:1/1.414}
+.sheet.sz-a5.landscape{width:108px;aspect-ratio:1.414/1}
+.sheet.sz-a4{width:96px;aspect-ratio:1/1.414}
+.sheet.sz-a4.landscape{width:136px;aspect-ratio:1.414/1}
+.sheet.sz-a3{width:116px;aspect-ratio:1/1.414}
+.sheet.sz-a3.landscape{width:164px;aspect-ratio:1.414/1}
+.sheet.sz-legal{width:96px;aspect-ratio:1/1.65}
+.sheet.sz-legal.landscape{width:158px;aspect-ratio:1.65/1}
 .sheet.bw{filter:grayscale(1)}
 .sheet.k2{box-shadow:5px -5px 0 -1px var(--pp),6px -6px 0 var(--bd),0 10px 22px rgba(15,23,42,.2)}
 .sheet.k3{box-shadow:5px -5px 0 -1px var(--pp),6px -6px 0 var(--bd),10px -10px 0 -1px var(--pp),11px -11px 0 var(--bd),0 10px 22px rgba(15,23,42,.2)}
@@ -282,7 +290,7 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
      <input class="rng hide" id="rt" placeholder="e.g. 1-5, 8, 11-13" inputmode="text" aria-label="Page range"></div>
   </div>
   <div class="panel">
-   <div class="row"><span class="l">Paper size</span><div class="seg" data-k="size"><button data-v="A4" class="on">A4</button><button data-v="A3">A3</button><button data-v="Legal">Legal</button></div></div>
+   <div class="row"><span class="l">Paper size</span><div class="seg" data-k="size"><button data-v="A5">A5</button><button data-v="A4" class="on">A4</button><button data-v="A3">A3</button><button data-v="Legal">Legal</button></div></div>
    <div class="row"><span class="l">Orientation</span><div class="seg" data-k="orient"><button data-v="portrait" class="on">Portrait</button><button data-v="landscape">Landscape</button></div></div>
    <div class="row"><span class="l">Pages per sheet<small>Saves paper for slides and notes</small></span><div class="seg" data-k="pps"><button data-v="1" class="on">1</button><button data-v="2">2</button><button data-v="4">4</button><button data-v="6">6</button></div></div>
    <div class="row"><span class="l">Quality</span><div class="seg" data-k="quality"><button data-v="draft">Draft</button><button data-v="normal" class="on">Normal</button><button data-v="high">High</button></div></div>
@@ -346,8 +354,13 @@ const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const D={file:null,serverFile:null,pages:1,color:'bw',sides:'single',size:'A4',orient:'portrait',pps:1,quality:'normal',copies:1,range:'all',rt:'',staple:false,collate:true,pay:'gpay',step:1};
 let S={...D};
 const _p = new URLSearchParams(window.location.search);
-if(_p.get('api')) localStorage.setItem('pb_api', _p.get('api').replace(/\/+$/, ''));
-const API_BASE = localStorage.getItem('pb_api') || ((window.location.protocol.startsWith('http')) ? (window.location.origin+'/api') : 'http://localhost:3000/api');
+let storedApi = localStorage.getItem('pb_api');
+if(storedApi && storedApi.includes('vercel.app')){ localStorage.removeItem('pb_api'); storedApi = null; }
+if(_p.get('api')) { storedApi = _p.get('api').replace(/\/+$/, ''); localStorage.setItem('pb_api', storedApi); }
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API_BASE = (isLocal && !storedApi)
+  ? (window.location.origin + '/api')
+  : (storedApi || (window.location.protocol.startsWith('http') && !window.location.origin.includes('vercel.app') ? (window.location.origin + '/api') : 'http://localhost:3000/api'));
 let currentJob=null,currentEventSource=null;
 
 // ── Web Audio Synthesizer (Zero-dependency Tactile Sound FX) ──
@@ -396,13 +409,13 @@ if($('#snd')){$('#snd').textContent=Snd.on?'🔊':'🔇';$('#snd').onclick=()=>{
   if(on)Snd.pop();
 }}
 
-async function checkMachineStatus(){try{const r=await fetch(API_BASE+'/machines/M-01');if(r.ok){const d=await r.json();if(d.machine)$('.mach').innerHTML=`${d.machine.name}, ${d.machine.location}<br><span class="dot-radar"></span><b>${d.machine.isOnline?'Online':'Offline'}</b> · A4 paper: ${d.machine.paperRemaining} sheets`}}catch(e){}}
+async function checkMachineStatus(){try{const r=await fetch(API_BASE+'/machines/M-01');if(r.ok){const d=await r.json();if(d.machine)$('.mach').innerHTML=`${d.machine.name}, ${d.machine.location}<br><span class="dot-radar"></span><b>${d.machine.isOnline?'Online':'Offline'}</b> · Paper: ${d.machine.paperRemaining} sheets`}}catch(e){}}
 checkMachineStatus();
 
 const money=x=>'₹'+x.toFixed(2);
 function count(){if(S.range!=='custom')return S.pages;const set=new Set();S.rt.split(',').forEach(p=>{const m=p.trim().match(/^(\d+)(?:-(\d+))?$/);if(!m)return;let a=+m[1],b=+(m[2]||m[1]);if(a>b)[a,b]=[b,a];for(let i=Math.max(a,1);i<=Math.min(b,S.pages);i++)set.add(i)});return set.size}
 function calc(){const n=count(),sheets=Math.ceil(n/S.pps),paper=(S.sides==='double'?Math.ceil(sheets/2):sheets)*S.copies;
- let ps=(S.color==='color'?5:1)*({A4:1,A3:2,Legal:1.2}[S.size])+(S.quality==='high'?.5:0);if(S.sides==='double')ps*=.9;
+ let ps=(S.color==='color'?5:1)*({A5:0.8,A4:1,A3:2,Legal:1.2}[S.size]||1)+(S.quality==='high'?.5:0);if(S.sides==='double')ps*=.9;
  const pr=sheets*S.copies*ps,st=S.staple?2*S.copies:0;return{n,paper,pr,st,total:pr+st,ps}}
 
 let tv=0,raf,TH={},pdfDoc=null,E=[],IMG=false;
@@ -524,10 +537,10 @@ $('#hero').innerHTML=$('#prn').outerHTML.replace(' id="prn"','').replace('id="cp
 
 function upd(){
  const c=calc();tween(c.total);$$('.seg').forEach(pl);
- const sh=$('#sheet');sh.className='sheet '+S.orient+' '+S.color+(S.copies>2?' k3':S.copies>1?' k2':'');
+ const sh=$('#sheet');sh.className='sheet '+S.orient+' '+S.color+' sz-'+(S.size||'a4').toLowerCase()+(S.copies>2?' k3':S.copies>1?' k2':'');
  const g=$('#pg');g.style.gridTemplateColumns='repeat('+({1:1,2:2,4:2,6:3}[S.pps])+',1fr)';
  g.innerHTML=Array(S.pps).fill('<i><b></b><b></b><b></b><b></b><u></u></i>').join('');
- $('#pv1').textContent=c.n+' page'+(c.n>1?'s':'')+' × '+S.copies+' cop'+(S.copies>1?'ies':'y');
+ $('#pv1').textContent=c.n+' page'+(c.n>1?'s':'')+' × '+S.copies+' cop'+(S.copies>1?'ies':'y')+' · '+S.size;
  const savings=c.n*S.copies-c.paper;
  $('#pv2').innerHTML=(S.color==='bw'?'Black & white':'Colour')+', '+(S.sides==='double'?'both sides':'one side')+', '+S.size+'. Uses '+c.paper+' sheet'+(c.paper>1?'s':'')+(savings>0?' · <span class="leaf">🌱</span> saves '+savings+' sheet'+(savings>1?'s':''):'')+'.';
  $('#nx').disabled=S.step===1?!S.file:(S.step===2?c.n<1:false);
@@ -641,7 +654,7 @@ async function run(){
   if(!S.serverFile){
    toast('Upload failed! Please check backend connection.','🔌');
    $('#s4h').textContent='Upload Failed 🔌';
-   $('#pcnt').textContent='Cannot reach server at '+API_BASE;
+   $('#pcnt').innerHTML='Cannot reach server at <code>'+API_BASE+'</code><br><br><a href="http://localhost:3000" style="display:inline-block;padding:8px 16px;background:var(--m);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 3px 10px rgba(255,46,147,.4)">👉 Switch to Localhost (http://localhost:3000)</a>';
    $('#again').classList.remove('hide');
    return;
   }

@@ -1,0 +1,20 @@
+services:
+  - type: web
+    name: printbox
+    runtime: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: node dist/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: UPLOAD_DIR
+        value: uploads
+      - key: MAX_FILE_SIZE_MB
+        value: "50"
+      - key: DEFAULT_MACHINE_ID
+        value: M-01
+      - key: DEFAULT_MACHINE_LOCATION
+        value: Library Block
+      - key: ENABLE_DEMO_PAYMENT
+        value: "true"

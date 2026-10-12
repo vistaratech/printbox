@@ -97,7 +97,7 @@ npm start
 ## 💰 Pricing Logic
 * **B&W Printing:** ₹1.00 / page
 * **Colour Printing:** ₹5.00 / page
-* **Paper Sizes:** A4 (1x), Legal (1.2x), A3 (2x)
+* **Paper Sizes:** A5 (0.8x), A4 (1x), Legal (1.2x), A3 (2x)
 * **Double Sided Discount:** 10% off printing rate
 * **High Quality Print:** +₹0.50 / page
 * **Staple Option:** +₹2.00 / copy

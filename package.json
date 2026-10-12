@@ -8,7 +8,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "kiosk:mock": "tsx src/kiosk/mockKiosk.ts",
-    "kiosk:real": "tsx src/kiosk/realKiosk.ts"
+    "kiosk:real": "tsx src/kiosk/realKiosk.ts",
+    "tunnel": "bin\\cloudflared.exe tunnel --url http://localhost:3000"
   },
   "repository": {
     "type": "git",

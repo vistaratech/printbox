@@ -119,7 +119,7 @@ export class JobService {
     const safeOptions: PrintOptions = {
       color: (['bw', 'color'] as const).includes(options.color) ? options.color : 'bw',
       sides: (['single', 'double'] as const).includes(options.sides) ? options.sides : 'single',
-      size: (['A4', 'A3', 'Legal'] as const).includes(options.size) ? options.size : 'A4',
+      size: (['A4', 'A3', 'A5', 'Legal'] as const).includes(options.size) ? options.size : 'A4',
       orient: (['portrait', 'landscape'] as const).includes(options.orient) ? options.orient : 'portrait',
       pps: ([1, 2, 4, 6] as const).includes(options.pps as any) ? options.pps : 1,
       quality: (['draft', 'normal', 'high'] as const).includes(options.quality) ? options.quality : 'normal',

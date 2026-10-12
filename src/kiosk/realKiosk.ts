@@ -2,12 +2,48 @@ import path from 'path';
 import fs from 'fs';
 import { config } from '../config';
 const ptp = require('pdf-to-printer');
+import { execSync } from 'child_process';
+
+/**
+ * Find the best physical printer by checking the Windows port type.
+ * WSD ports render documents properly; raw TCP ports send binary garbage.
+ */
+async function findBestPhysicalPrinter(): Promise<string | undefined> {
+  try {
+    const available = await ptp.getPrinters();
+    const physicalPrinters = available.filter((p: any) => {
+      const n = (p.name || '').toLowerCase();
+      return !n.includes('pdf') && !n.includes('onenote') && !n.includes('xps') && !n.includes('fax');
+    });
+    if (physicalPrinters.length === 0) return undefined;
+
+    // Try to pick a WSD printer (renders properly) over a raw TCP printer
+    try {
+      const psOutput = execSync(
+        'powershell -NoProfile -Command "Get-Printer | Select-Object Name, PortName | ConvertTo-Json"',
+        { encoding: 'utf-8', timeout: 5000 }
+      );
+      const winPrinters: any[] = JSON.parse(psOutput);
+      // Prefer WSD port printers (they render through Windows print pipeline)
+      const wsdPrinter = physicalPrinters.find((p: any) => {
+        const wp = winPrinters.find((w: any) => w.Name === p.name);
+        return wp && (wp.PortName || '').startsWith('WSD-');
+      });
+      if (wsdPrinter) return wsdPrinter.name;
+    } catch (_) {}
+
+    // Fallback: return first physical printer found
+    return physicalPrinters[0].name;
+  } catch (_) {
+    return undefined;
+  }
+}
 
 const API_BASE = process.env.API_URL || `http://localhost:${config.port}/api`;
 const MACHINE_ID = process.env.MACHINE_ID || config.defaultMachineId;
 
-// Target printer name (leave empty to automatically use Windows default printer)
-const TARGET_PRINTER = process.env.PRINTER_NAME || undefined;
+// Target printer name (leave empty to automatically auto-detect physical printer or use default)
+let TARGET_PRINTER = process.env.PRINTER_NAME || undefined;
 
 async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -107,11 +143,28 @@ async function processJob(job: any) {
     const printOptions: any = {
       copies: job.options.copies || 1,
       paperSize: job.options.size || 'A4',
-      monochrome: job.options.color === 'bw'
+      monochrome: job.options.color === 'bw',
+      scale: 'fit'
     };
+
+    if (job.options.orient === 'landscape' || job.options.orient === 'portrait') {
+      printOptions.orientation = job.options.orient;
+    }
+
+    // Auto-detect physical printer if not explicitly defined
+    if (!TARGET_PRINTER) {
+      const best = await findBestPhysicalPrinter();
+      if (best) {
+        TARGET_PRINTER = best;
+        console.log(`🎯 Dynamically selected physical printer: "${TARGET_PRINTER}"`);
+      }
+    }
 
     if (TARGET_PRINTER) {
       printOptions.printer = TARGET_PRINTER;
+      console.log(`🖨️  Sending to printer: "${TARGET_PRINTER}"`);
+    } else {
+      console.warn(`⚠️  No physical printer found. Falling back to Windows default (may be Print to PDF).`);
     }
 
     if (job.options.sides === 'double') {
@@ -157,7 +210,18 @@ async function main() {
     printers.forEach((p: any) => console.log(`   - ${p.name}`));
     const def = await ptp.getDefaultPrinter();
     console.log(`⭐ Active Default Printer: ${def?.name || 'None'}`);
-    if (TARGET_PRINTER) {
+
+    if (!TARGET_PRINTER) {
+      const best = await findBestPhysicalPrinter();
+      if (best) {
+        TARGET_PRINTER = best;
+        console.log(`🎯 Auto-selected physical printer: "${TARGET_PRINTER}"`);
+      } else {
+        console.warn('⚠️  ATTENTION: No physical printer driver detected in Windows!');
+        console.warn(`   Currently printing to virtual printer: "${def?.name || 'None'}".`);
+        console.warn('👉 To print real paper: Open Windows Settings -> "Bluetooth & devices" -> "Printers & scanners" -> "Add device"');
+      }
+    } else {
       console.log(`🎯 Explicit Target Printer: ${TARGET_PRINTER}`);
     }
   } catch (e) {
