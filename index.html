@@ -345,7 +345,9 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const D={file:null,serverFile:null,pages:1,color:'bw',sides:'single',size:'A4',orient:'portrait',pps:1,quality:'normal',copies:1,range:'all',rt:'',staple:false,collate:true,pay:'gpay',step:1};
 let S={...D};
-const API_BASE=(window.location.protocol.startsWith('http'))?(window.location.origin+'/api'):'http://localhost:3000/api';
+const _p = new URLSearchParams(window.location.search);
+if(_p.get('api')) localStorage.setItem('pb_api', _p.get('api').replace(/\/+$/, ''));
+const API_BASE = localStorage.getItem('pb_api') || ((window.location.protocol.startsWith('http')) ? (window.location.origin+'/api') : 'http://localhost:3000/api');
 let currentJob=null,currentEventSource=null;
 
 // ── Web Audio Synthesizer (Zero-dependency Tactile Sound FX) ──
@@ -634,7 +636,7 @@ async function run(){
   const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:S.range,rangeText:S.rt,staple:S.staple,collate:S.collate},machineId:'M-01',paymentMethod:S.pay})});
   if(r.ok){
    const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
-   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:true})});
+   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:false})});
    const es=new EventSource(API_BASE+'/jobs/'+currentJob.jobCode+'/stream');currentEventSource=es;
    es.onmessage=e=>{try{
     const j=JSON.parse(e.data);
@@ -646,8 +648,13 @@ async function run(){
    es.onerror=()=>es.close();return;
   }
  }catch(x){}
- $('#jc').textContent='PB-'+Math.floor(1000+Math.random()*9000);
- let k=0;draw(0);const T=[1300,1300,3600,1200],nx=()=>setTimeout(()=>{k++;draw(k);if(k>=ST.length){$('#done').classList.remove('hide');$('#again').classList.remove('hide')}else nx()},T[k]);nx()
+ toast('Could not connect to PrintBox Backend Server!','🔌');
+ $('#s4h').textContent='Printer Offline 🔌';
+ $('#pcnt').textContent='Please make sure backend machine is online';
+ $('#done').classList.remove('hide');
+ $('#done').textContent='Failed to connect to printer. Please check server.';
+ $('#done').style.color='#ff2e93';
+ $('#again').classList.remove('hide');
 }
 
 $('#again').onclick=()=>{
