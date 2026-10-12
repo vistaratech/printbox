@@ -632,7 +632,20 @@ async function run(){
  const draw=k=>{$('#stl').innerHTML=ST.map((t,i)=>'<div class="st '+(i<k?'ok':i===k?'go':'')+'"><span class="d">'+(i<k?'✓':'')+'</span>'+t+'</div>').join('');$('#pb').style.width=(k/ST.length*100)+'%';$('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));ctr(k)};
  if(currentEventSource){currentEventSource.close();currentEventSource=null}
  try{
-  const fp=S.serverFile||{fileName:S.file?S.file.name:'doc.pdf',originalName:S.file?S.file.name:'doc.pdf',fileSize:S.file?S.file.size:0,detectedPages:S.pages};
+  if(!S.serverFile && S.file){
+   toast('Uploading document to machine…','⏳');
+   const fd=new FormData();fd.append('file',S.file);
+   const upR=await fetch(API_BASE+'/upload',{method:'POST',body:fd}).catch(()=>null);
+   if(upR && upR.ok){const upD=await upR.json();if(upD&&upD.file)S.serverFile=upD.file}
+  }
+  if(!S.serverFile){
+   toast('Upload failed! Please check backend connection.','🔌');
+   $('#s4h').textContent='Upload Failed 🔌';
+   $('#pcnt').textContent='Cannot reach server at '+API_BASE;
+   $('#again').classList.remove('hide');
+   return;
+  }
+  const fp=S.serverFile;
   const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:S.range,rangeText:S.rt,staple:S.staple,collate:S.collate},machineId:'M-01',paymentMethod:S.pay})});
   if(r.ok){
    const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
