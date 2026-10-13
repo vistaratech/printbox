@@ -379,19 +379,53 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
  </section>
 
   <section id="s4" class="hide">
-   <div class="guide-card"><div class="mascot printbot" aria-hidden="true"><span class="bubble a">Go</span><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="scan"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>Printer bot is working</b><small>Progress live-a update aagum. Job code copy pannitu tray-la pages collect pannunga.</small></div></div>
-  <svg class="prn" id="prn" viewBox="0 0 200 140" aria-hidden="true"><defs><clipPath id="cp"><rect x="0" y="82" width="200" height="58"/></clipPath><linearGradient id="pg1"><stop offset="0" stop-color="#0098c9"/><stop offset=".5" stop-color="#e6007e"/><stop offset="1" stop-color="#ffd400"/></linearGradient></defs><g clip-path="url(#cp)"><g class="paper"><rect class="pa" x="58" y="12" width="84" height="72" rx="3"/><rect class="ln" x="68" y="24" width="64" height="5" rx="2"/><rect class="ln" x="68" y="35" width="44" height="5" rx="2"/><rect class="ln" x="68" y="46" width="58" height="5" rx="2"/><rect x="68" y="58" width="64" height="16" rx="3" fill="url(#pg1)"/></g></g><rect class="bd" x="18" y="36" width="164" height="48" rx="14"/><rect class="sl" x="50" y="72" width="100" height="6" rx="3"/><circle class="led" cx="162" cy="52" r="4"/></svg>
-  <h2 id="s4h" style="text-align:center"></h2><div class="cnt" id="pcnt"></div><p class="sub" style="text-align:center;margin-top:10px">Your job code</p>
-  <div class="job-wrap">
-   <div class="job" id="jc" role="button" tabindex="0" title="Click to copy code"></div>
-   <button class="job-copy-btn" id="cpbtn"><i class="ico sm copy"></i> Tap code to copy</button>
-  </div>
-  <p class="sub" style="text-align:center">Keep this if the machine asks for it.</p>
-  <div class="prog"><i id="pb"></i></div>
-  <div class="panel" id="stl"></div>
-  <p class="note hide" id="done" style="text-align:center;font-size:15px;color:var(--ok);font-weight:700">Take your pages from the tray, then run to class!</p>
-  <button class="btn hide" id="again" style="width:100%">Print another file</button>
- </section>
+   <div style="text-align:center;padding:14px 0 10px;">
+    <div style="display:inline-flex;align-items:center;justify-content:center;width:70px;height:70px;border-radius:50%;background:rgba(20,184,106,0.16);border:3px solid var(--ok);margin-bottom:12px;box-shadow:0 0 26px rgba(20,184,106,0.35);">
+      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="var(--ok)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h2 id="s4h" style="text-align:center;font-size:27px;margin-bottom:6px;">Print Sent to Machine!</h2>
+    <p id="s4sub" style="color:var(--mu);font-size:14.5px;margin:0 0 16px;">Your document is queued and printing now on the Epson printer.</p>
+   </div>
+
+   <!-- Job Code Card -->
+   <div style="background:var(--pn);border:2px solid var(--bd);border-radius:18px;padding:18px;text-align:center;margin-bottom:16px;box-shadow:3px 3px 0 var(--bd)">
+     <span style="font-size:11.5px;font-weight:800;color:var(--mu);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:6px;">Job Reference Code</span>
+     <div class="job-wrap" style="margin:4px 0 8px;">
+       <div class="job" id="jc" role="button" tabindex="0" title="Click to copy code">PB-0000</div>
+       <button class="job-copy-btn" id="cpbtn"><i class="ico sm copy"></i> Tap code to copy</button>
+     </div>
+     <div id="jobMetaSummary" style="font-size:13px;font-weight:700;color:var(--tx);margin-top:10px;padding-top:10px;border-top:1.5px dashed var(--ln);">
+       1 copy · Black &amp; White · A4
+     </div>
+   </div>
+
+   <!-- Tray Pickup Notice Card -->
+   <div class="guide-card" style="margin-bottom:16px;border-color:var(--ok);">
+     <div class="mascot" aria-hidden="true" style="background:rgba(20,184,106,0.12)">
+       <i class="ico sm print" style="width:26px;height:26px;color:var(--ok)"></i>
+     </div>
+     <div class="guide-copy">
+       <b style="color:var(--ok);font-size:14.5px;" id="pickupTitle">Collect from Printer Tray</b>
+       <small style="font-size:12.5px;" id="pickupDesc">The Lenovo Kiosk will automatically feed and print your document. Grab your pages directly from the tray!</small>
+     </div>
+   </div>
+
+   <!-- Live Hardware Status Banner -->
+   <div id="liveStatusBox" class="hide" style="text-align:center;margin-bottom:16px;padding:11px 14px;background:rgba(0,242,254,0.1);border:1.5px solid var(--c);border-radius:14px;font-weight:700;font-size:14px;color:var(--c);">
+     <span id="liveStatusText">Printing your pages…</span>
+   </div>
+
+   <!-- Print Another File Button (Always available) -->
+   <button class="btn" id="again" style="width:100%;margin-bottom:10px;display:flex;align-items:center;justify-content:center;gap:8px;">
+     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+       <polyline points="23 4 23 10 17 10"/>
+       <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+     </svg>
+     Print Another Document
+   </button>
+  </section>
 </div>
 
 <div style="text-align:center;margin-top:24px;padding:14px;border:2px solid var(--bd);border-radius:16px;background:var(--pn);box-shadow:3px 3px 0 var(--bd)">
@@ -712,11 +746,16 @@ const copyJob=()=>{
 $('#jc').onclick=copyJob;
 if($('#cpbtn'))$('#cpbtn').onclick=copyJob;
 
-const ST=['Payment received','File sent to the machine','Printing your pages','Ready in the tray'];
 async function run(){
- go(4);$('#done').classList.add('hide');$('#again').classList.add('hide');Snd.pay();
-  const draw=k=>{$('#stl').innerHTML=ST.map((t,i)=>'<div class="st '+(i<k?'ok':i===k?'go':'')+'"><span class="d">'+(i<k?'OK':'')+'</span>'+t+'</div>').join('');$('#pb').style.width=(k/ST.length*100)+'%';$('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));ctr(k)};
+ go(4);
  if(currentEventSource){currentEventSource.close();currentEventSource=null}
+ 
+ $('#s4h').textContent='Submitting Print…';
+ if($('#s4sub'))$('#s4sub').textContent='Connecting to machine and preparing print queue…';
+ if($('#liveStatusBox'))$('#liveStatusBox').classList.add('hide');
+ if($('#again'))$('#again').classList.remove('hide');
+ Snd.pay();
+ 
  try{
   if(!S.serverFile && S.file){
    toast('Uploading document to machine…','⏳');
@@ -727,33 +766,60 @@ async function run(){
   if(!S.serverFile){
    toast('Upload failed! Please check backend connection.','<span class="ico sm plug"></span>');
    $('#s4h').textContent='Upload Failed';
-   $('#pcnt').innerHTML='Cannot reach server at <code>'+API_BASE+'</code><br><br><a href="http://localhost:3000" style="display:inline-block;padding:8px 16px;background:var(--m);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 3px 10px rgba(255,46,147,.4)">Switch to Localhost (http://localhost:3000)</a>';
-   $('#again').classList.remove('hide');
+   if($('#s4sub'))$('#s4sub').innerHTML='Cannot reach server at <code>'+API_BASE+'</code>';
    return;
   }
   const fp=S.serverFile;
   const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:S.range,rangeText:S.rt,staple:S.staple,collate:S.collate},machineId:'M-01',paymentMethod:S.pay})});
   if(r.ok){
-   const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
+   const d=await r.json();currentJob=d.job;
+   $('#jc').textContent=currentJob.jobCode;
+   $('#s4h').textContent='Print Sent to Machine!';
+   if($('#s4sub'))$('#s4sub').textContent='Your document is queued and printing now on the Epson printer.';
+   
+   const fName = S.file ? S.file.name : 'Document';
+   const copiesStr = S.copies + (S.copies > 1 ? ' copies' : ' copy');
+   const colorStr = S.color === 'bw' ? 'Black & White' : 'Colour';
+   if($('#jobMetaSummary')){
+     $('#jobMetaSummary').textContent = `${fName} · ${copiesStr} · ${colorStr} · ${S.size} · ₹${calc().total.toFixed(2)}`;
+   }
+
    await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:false})});
+   
+   boom();
+   Snd.fanfare();
+   toast('Print job sent! '+currentJob.jobCode,'✅');
+   
    const es=new EventSource(API_BASE+'/jobs/'+currentJob.jobCode+'/stream');currentEventSource=es;
    es.onmessage=e=>{try{
     const j=JSON.parse(e.data);
-    const sm={'payment_received':0,'sending_to_machine':1,'printing':2,'completed':4};
-    const sidx=sm[j.status]!==undefined?sm[j.status]:1;draw(sidx);
-    if(j.status==='printing'){$('#pcnt').textContent=(j.printedPages||0)+' of '+j.totalPhysicalPages+' pages'}
-    if(j.status==='completed'){$('#done').classList.remove('hide');$('#again').classList.remove('hide');es.close();checkMachineStatus()}
+    const box=$('#liveStatusBox'), txt=$('#liveStatusText');
+    if(j.status==='printing'){
+      if(box)box.classList.remove('hide');
+      if(txt)txt.textContent='🖨️ Epson is printing page '+(j.printedPages||1)+' of '+(j.totalPhysicalPages||S.copies)+'…';
+    }
+    if(j.status==='completed'){
+      if(box){
+        box.classList.remove('hide');
+        box.style.background='rgba(20,184,106,0.15)';
+        box.style.borderColor='var(--ok)';
+        box.style.color='var(--ok)';
+      }
+      if(txt)txt.textContent='🎉 Done! All pages are ready in the tray.';
+      if($('#pickupTitle'))$('#pickupTitle').textContent='Pages Ready in Tray!';
+      if($('#pickupDesc'))$('#pickupDesc').textContent='All printed sheets are ready. Please collect them from the printer tray.';
+      boom();Snd.fanfare();
+      checkMachineStatus();
+      es.close();
+    }
    }catch(x){}};
-   es.onerror=()=>es.close();return;
+   es.onerror=()=>es.close();
+   return;
   }
  }catch(x){}
-  toast('Could not connect to PrintBox Backend Server!','<span class="ico sm plug"></span>');
-  $('#s4h').textContent='Printer Offline';
- $('#pcnt').textContent='Please make sure backend machine is online';
- $('#done').classList.remove('hide');
- $('#done').textContent='Failed to connect to printer. Please check server.';
- $('#done').style.color='#ff2e93';
- $('#again').classList.remove('hide');
+ toast('Could not connect to PrintBox Backend Server!','<span class="ico sm plug"></span>');
+ $('#s4h').textContent='Printer Offline';
+ if($('#s4sub'))$('#s4sub').textContent='Please make sure backend server is reachable';
 }
 
 $('#again').onclick=()=>{

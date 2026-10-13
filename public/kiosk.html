@@ -766,6 +766,13 @@ function sendToPrinter(jobCode, fileName) {
   const statusTxt = document.getElementById('machineStatusText');
   if (statusTxt) statusTxt.textContent = `Printing ${jobCode}…`;
 
+  // Notify server that hardware printing has started
+  fetch(`${API}/kiosk/M-01/jobs/${jobCode}/progress`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ printedPages: 1, statusMessage: `Printing ${jobCode}…` })
+  }).catch(() => {});
+
   const frame = document.getElementById('printWorkerFrame');
   frame.onload = function() {
     try {
