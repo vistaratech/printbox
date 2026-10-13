@@ -596,7 +596,13 @@ body::after {
   <section class="kiosk-panel">
     <div class="header-row">
       <div class="brand-badge">
-        <div class="brand-icon">🖨️</div>
+        <div class="brand-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+            <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+            <rect x="6" y="14" width="12" height="8" rx="1"/>
+          </svg>
+        </div>
         <div>
           <div class="brand-title">PrintBox</div>
           <div class="brand-subtitle">Smart Printing Kiosk</div>
@@ -609,7 +615,12 @@ body::after {
     </div>
 
     <div class="hero-text">
-      <div class="hero-tag">⚡ Self-Service Express</div>
+      <div class="hero-tag">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+          <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+        </svg>
+        Self-Service Express
+      </div>
       <h1 class="hero-h1">Scan. Upload.<br><span class="gradient-text">Print it.</span></h1>
       <p class="hero-desc">Point your smartphone camera at the QR code below. Upload documents and pay with Google Pay / PhonePe.</p>
     </div>
@@ -646,7 +657,11 @@ body::after {
 
     <div class="telemetry-row">
       <div class="url-pill">
-        <span>🌐</span> <span id="hostUrlDisplay">printbox.local</span>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/>
+          <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+        <span id="hostUrlDisplay">printbox.local</span>
       </div>
       <div class="machine-status" id="machineStatusBadge">
         <span class="status-beacon"></span>
@@ -664,17 +679,30 @@ body::after {
       </div>
       <div class="action-tools">
         <button class="mode-toggle" id="autoPrintBtn" onclick="toggleAutoPrint()">
-          <span id="autoPrintIcon">⚡</span> Auto-Print: <b id="autoPrintState">ON</b>
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+          </svg>
+          Auto-Print: <b id="autoPrintState">ON</b>
         </button>
         <button class="test-btn" onclick="testEpsonPrint()">
-          <span>🧪</span> Test Print
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
+            <line x1="8.5" y1="2" x2="15.5" y2="2"/>
+            <line x1="7" y1="16" x2="17" y2="16"/>
+          </svg>
+          Test Print
         </button>
       </div>
     </div>
 
     <div class="queue-scroll" id="jobFeed">
       <div class="empty-feed">
-        <i>📄</i>
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
         <p>Waiting for print jobs from students…</p>
       </div>
     </div>
@@ -736,7 +764,7 @@ function sendToPrinter(jobCode, fileName) {
   const fileUrl = location.origin + '/uploads/' + encodeURIComponent(fileName);
   
   const statusTxt = document.getElementById('machineStatusText');
-  if (statusTxt) statusTxt.textContent = `🖨️ Printing ${jobCode}…`;
+  if (statusTxt) statusTxt.textContent = `Printing ${jobCode}…`;
 
   const frame = document.getElementById('printWorkerFrame');
   frame.onload = function() {
@@ -762,18 +790,18 @@ async function finishJob(jobCode) {
 }
 
 /**
- * 🧪 Test Print: Verification Slip
+ * Test Print: Verification Slip
  */
 function testEpsonPrint() {
   const testSlip = `
     <html>
     <head><title>PrintBox Test</title></head>
     <body style="font-family:'Outfit',sans-serif;text-align:center;padding:50px;">
-      <h2 style="color:#000;font-size:24px;margin-bottom:8px;">🖨️ PrintBox Kiosk Terminal</h2>
+      <h2 style="color:#000;font-size:24px;margin-bottom:8px;">PrintBox Kiosk Terminal</h2>
       <p style="font-size:14px;color:#555;">Hardware Connection Test: Lenovo Pad ➔ Epson L3250</p>
       <p style="font-size:12px;color:#777;margin-top:6px;">Time: ${new Date().toLocaleString()}</p>
       <hr style="border:0;border-top:2px dashed #000;margin:24px 0;">
-      <p style="font-size:18px;font-weight:bold;color:#10b981;">✅ STATUS: CONNECTED & WORKING PERFECTLY!</p>
+      <p style="font-size:18px;font-weight:bold;color:#10b981;">STATUS: CONNECTED & WORKING PERFECTLY!</p>
     </body>
     </html>
   `;
@@ -851,7 +879,12 @@ function renderJobItems(jobs) {
   if (!jobs.length) {
     container.innerHTML = `
       <div class="empty-feed">
-        <i>📄</i>
+        <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+          <polyline points="14 2 14 8 20 8"/>
+          <line x1="16" y1="13" x2="8" y2="13"/>
+          <line x1="16" y1="17" x2="8" y2="17"/>
+        </svg>
         <p>Waiting for print jobs from students…</p>
       </div>
     `;
@@ -879,9 +912,19 @@ function renderJobItems(jobs) {
         </div>
         <div>
           ${isDone 
-            ? '<span class="status-badge-done">✅ Ready</span>' 
+            ? `<span class="status-badge-done">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="20 6 9 17 4 12"/>
+                </svg>
+                Ready
+               </span>` 
             : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
-                🖨️ Print Now
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+                  <rect x="6" y="14" width="12" height="8" rx="1"/>
+                </svg>
+                Print Now
                </button>`
           }
         </div>
