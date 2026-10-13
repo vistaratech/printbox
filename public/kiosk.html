@@ -605,15 +605,32 @@ body::after {
 /* ── Native Android Printing Engine (Epson L3250 Compatible) ── */
 @media screen {
   #printArea {
-    display: none !important;
+    position: fixed !important;
+    top: -9999px !important;
+    left: -9999px !important;
+    width: 1px !important;
+    height: 1px !important;
+    overflow: hidden !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
   }
 }
 @media print {
+  /* CRITICAL: Completely hide background animations, fixed blur orbs, and screen UI */
+  body::before, body::after {
+    display: none !important;
+    content: none !important;
+  }
+  .kiosk-wrapper {
+    display: none !important;
+  }
   body {
     background: #ffffff !important;
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
+    width: 100% !important;
+    min-height: auto !important;
   }
   body > *:not(#printArea) {
     display: none !important;
@@ -622,9 +639,12 @@ body::after {
     display: block !important;
     position: static !important;
     width: 100% !important;
+    height: auto !important;
     background: #ffffff !important;
     margin: 0 !important;
     padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
   }
   .print-page {
     page-break-after: always !important;
@@ -645,7 +665,7 @@ body::after {
   }
   @page {
     size: auto;
-    margin: 0mm;
+    margin: 4mm;
   }
 }
 </style>
@@ -836,15 +856,6 @@ async function sendToPrinter(jobCode, fileName) {
     });
   } catch (_) {}
 
-  // 2. Fully Kiosk Browser Native Silent Print Hook (if running inside Fully Kiosk)
-  if (window.fully && typeof window.fully.print === 'function') {
-    try {
-      window.fully.print(fileUrl);
-      setTimeout(() => finishJob(jobCode), 4000);
-      return;
-    } catch (_) {}
-  }
-
   const printArea = document.getElementById('printArea');
   printArea.innerHTML = '';
 
@@ -852,7 +863,7 @@ async function sendToPrinter(jobCode, fileName) {
   const isPdf = ext === 'pdf';
   const isImage = /^(jpe?g|png|webp|gif)$/.test(ext);
 
-  // 3. Render PDF document into native print area
+  // 2. Render PDF document into native print area
   if (isPdf && typeof pdfjsLib !== 'undefined') {
     try {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
@@ -880,7 +891,7 @@ async function sendToPrinter(jobCode, fileName) {
     }
   }
 
-  // 4. Render Image into native print area
+  // 3. Render Image into native print area
   if (isImage) {
     const pageWrap = document.createElement('div');
     pageWrap.className = 'print-page';
@@ -892,7 +903,7 @@ async function sendToPrinter(jobCode, fileName) {
     return;
   }
 
-  // 5. Direct Fallback
+  // 4. Direct Fallback
   const pageWrap = document.createElement('div');
   pageWrap.className = 'print-page';
   pageWrap.innerHTML = `<img src="${fileUrl}" style="max-width:100%;height:auto;">`;
@@ -904,7 +915,33 @@ function triggerBrowserPrint(jobCode) {
   const statusTxt = document.getElementById('machineStatusText');
   if (statusTxt) statusTxt.textContent = `Printing ${jobCode} on Epson L3250…`;
 
-  // Focus and trigger native Android Print Spooler (Epson Print Enabler)
+  const printArea = document.getElementById('printArea');
+
+  // Handle print completion safely via afterprint event
+  let handled = false;
+  const onDone = () => {
+    if (handled) return;
+    handled = true;
+    finishJob(jobCode);
+    setTimeout(() => {
+      if (printArea) printArea.innerHTML = '';
+      inFlightJobSet.delete(jobCode);
+    }, 6000);
+  };
+
+  window.addEventListener('afterprint', onDone, { once: true });
+  // Fallback timer (in case afterprint does not fire on older Android WebViews)
+  setTimeout(onDone, 25000);
+
+  // Check if Fully Kiosk Silent Print API is available
+  if (window.fully && typeof window.fully.print === 'function') {
+    try {
+      window.fully.print();
+      return;
+    } catch (_) {}
+  }
+
+  // Native Android print spooler trigger
   setTimeout(() => {
     try {
       window.focus();
@@ -912,14 +949,7 @@ function triggerBrowserPrint(jobCode) {
     } catch (e) {
       console.error('Print trigger error:', e);
     }
-
-    // Complete job and clear print buffer
-    setTimeout(() => {
-      finishJob(jobCode);
-      const printArea = document.getElementById('printArea');
-      if (printArea) printArea.innerHTML = '';
-    }, 4500);
-  }, 250);
+  }, 350);
 }
 
 async function finishJob(jobCode) {
@@ -932,27 +962,57 @@ async function finishJob(jobCode) {
 }
 
 /**
- * Test Print: Instant Epson L3250 Slip via native window.print()
+ * Test Print: Instant Epson L3250 Slip via native print engine
  */
 function testEpsonPrint() {
+  const statusTxt = document.getElementById('machineStatusText');
+  if (statusTxt) statusTxt.textContent = 'Generating test print…';
+
   const printArea = document.getElementById('printArea');
   printArea.innerHTML = `
-    <div class="print-page" style="padding:60px 40px;text-align:center;color:#000;font-family:sans-serif;">
-      <h1 style="font-size:30px;margin-bottom:12px;color:#000;">PrintBox Terminal Test</h1>
-      <p style="font-size:16px;color:#444;margin-bottom:6px;">Lenovo Pad ➔ Epson L3250 Wi-Fi Test</p>
-      <p style="font-size:13px;color:#777;">Time: ${new Date().toLocaleString()}</p>
-      <hr style="border:0;border-top:2px dashed #000;margin:30px 0;">
-      <p style="font-size:24px;font-weight:bold;color:#10b981;margin-bottom:8px;">CONNECTION SUCCESSFUL!</p>
-      <p style="font-size:14px;color:#555;">Epson printer is online, paired, and ready to print.</p>
+    <div class="print-page" style="padding:40px 20px;text-align:center;color:#000000;font-family:'Outfit',system-ui,sans-serif;max-width:550px;margin:0 auto;">
+      <div style="border:3px solid #000;border-radius:18px;padding:32px 24px;background:#fff;">
+        <h1 style="font-size:28px;font-weight:900;margin-bottom:6px;color:#000;">🖨️ PrintBox Terminal</h1>
+        <p style="font-size:14px;font-weight:600;color:#333;margin-bottom:4px;">Lenovo Pad ➔ Epson L3250 Direct Test</p>
+        <p style="font-size:12px;color:#666;">Time: ${new Date().toLocaleString()}</p>
+        <hr style="border:0;border-top:2px dashed #000;margin:20px 0;">
+        <p style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:8px;">✅ PRINTER CONNECTED & READY!</p>
+        <p style="font-size:14px;color:#444;line-height:1.5;">Your Lenovo Pad can print directly to Epson L3250 without a PC.</p>
+        <hr style="border:0;border-top:1px solid #ddd;margin:20px 0;">
+        <p style="font-size:11px;color:#888;">PrintBox Self-Service Kiosk · Cloud Connected</p>
+      </div>
     </div>
   `;
-  setTimeout(() => {
-    window.focus();
-    window.print();
+
+  // Safe cleanup handler (waits until print dialog finishes, NOT 3 seconds!)
+  const cleanup = () => {
+    window.removeEventListener('afterprint', cleanup);
+    if (statusTxt) statusTxt.textContent = 'M-01 · Ready';
     setTimeout(() => {
       if (printArea) printArea.innerHTML = '';
-    }, 3000);
-  }, 200);
+    }, 6000);
+  };
+  window.addEventListener('afterprint', cleanup, { once: true });
+  setTimeout(cleanup, 30000);
+
+  // Check if Fully Kiosk Silent Print is available
+  if (window.fully && typeof window.fully.print === 'function') {
+    try {
+      window.fully.print();
+      return;
+    } catch (_) {}
+  }
+
+  // Native window.print() trigger
+  setTimeout(() => {
+    try {
+      window.focus();
+      window.print();
+    } catch (e) {
+      console.error('Print trigger error:', e);
+      alert('Print error: ' + (e.message || e));
+    }
+  }, 350);
 }
 
 /**
