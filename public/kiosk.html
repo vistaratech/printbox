@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
 :root {
   --bg: #07090f;
@@ -145,9 +146,15 @@ body {
   position: relative;
   box-shadow: 0 0 0 10px var(--y), 0 24px 80px rgba(25, 195, 240, 0.35);
   animation: qrfloat 3s ease-in-out infinite;
+  padding: 14px;
 }
 @keyframes qrfloat { 50% { transform: translateY(-6px); } }
-.qr svg { width: 78%; height: 78%; }
+.qr img, .qr canvas {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 12px;
+  display: block;
+}
 
 .url-box {
   display: flex;
@@ -377,31 +384,7 @@ body {
     <p class="sub">Scan the QR code with any smartphone camera. No app download needed.</p>
     
     <div class="qr-zone">
-      <div class="qr">
-        <svg viewBox="0 0 100 100">
-          <rect width="100" height="100" fill="#fff"/>
-          <g fill="#111">
-            <rect x="8" y="8" width="26" height="26" rx="3"/>
-            <rect x="13" y="13" width="16" height="16" fill="#fff"/>
-            <rect x="17" y="17" width="8" height="8" fill="#111"/>
-            <rect x="66" y="8" width="26" height="26" rx="3"/>
-            <rect x="71" y="13" width="16" height="16" fill="#fff"/>
-            <rect x="75" y="17" width="8" height="8" fill="#111"/>
-            <rect x="8" y="66" width="26" height="26" rx="3"/>
-            <rect x="13" y="71" width="16" height="16" fill="#fff"/>
-            <rect x="17" y="75" width="8" height="8" fill="#111"/>
-            <rect x="38" y="10" width="6" height="6"/>
-            <rect x="52" y="20" width="6" height="6"/>
-            <rect x="42" y="42" width="16" height="16" rx="3" fill="#ff2e93"/>
-            <rect x="68" y="40" width="6" height="6"/>
-            <rect x="82" y="50" width="6" height="6"/>
-            <rect x="38" y="70" width="6" height="6"/>
-            <rect x="52" y="82" width="6" height="6"/>
-            <rect x="70" y="70" width="6" height="6"/>
-            <rect x="82" y="82" width="6" height="6"/>
-          </g>
-        </svg>
-      </div>
+      <div class="qr" id="qrcode"></div>
     </div>
     
     <div class="url-box">
@@ -622,6 +605,32 @@ function tickClock() {
 }
 tickClock();
 setInterval(tickClock, 1000);
+
+function generateKioskQr() {
+  const qrContainer = document.getElementById('qrcode');
+  if (!qrContainer) return;
+  qrContainer.innerHTML = '';
+  const targetUrl = location.origin;
+  
+  // Try client-side QRCode library
+  if (typeof QRCode !== 'undefined') {
+    try {
+      new QRCode(qrContainer, {
+        text: targetUrl,
+        width: 210,
+        height: 210,
+        colorDark: "#000000",
+        colorLight: "#ffffff",
+        correctLevel: QRCode.CorrectLevel.M
+      });
+      return;
+    } catch (_) {}
+  }
+  
+  // Reliable high-contrast QR fallback
+  qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=4&data=${encodeURIComponent(targetUrl)}" alt="Scan to Print" style="width:100%;height:100%;border-radius:12px;display:block;">`;
+}
+generateKioskQr();
 
 document.getElementById('urlDisplay').textContent = location.host;
 loadJobs();
