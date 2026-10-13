@@ -40,7 +40,7 @@ router.post('/:machineId/jobs/:jobCode/progress', (req, res) => {
  */
 router.post('/:machineId/jobs/:jobCode/complete', (req, res) => {
     const jobCode = String(req.params.jobCode).toUpperCase();
-    const job = jobService_1.JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages 🎉');
+    const job = jobService_1.JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages');
     if (!job) {
         return res.status(404).json({ error: 'Job not found' });
     }

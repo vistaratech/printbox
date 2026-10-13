@@ -7,7 +7,6 @@ Run:
 Notes:
   - Single file app (HTML + CSS + JS). No build step.
   - Internet is needed for the font and for PDF page previews (pdf.js loads from cdnjs).
-  - Payment is demo mode only. File upload, edits and printing are not connected to a backend yet.
   - Price rates are in the calc() function in index.html (B&W Rs 1, Colour Rs 5 per page).
 
 Next: Backend (Node + Express + TypeScript) and Pi agent (mock mode).

@@ -57,7 +57,7 @@ router.post('/:machineId/jobs/:jobCode/complete', (req: Request, res: Response) 
   const job = JobService.updateStatus(
     jobCode,
     'completed',
-    'Ready in the tray! Grab your pages 🎉'
+    'Ready in the tray! Grab your pages'
   );
 
   if (!job) {

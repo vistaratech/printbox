@@ -6,7 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const app_1 = __importDefault(require("./app"));
 const config_1 = require("./config");
 const jobService_1 = require("./services/jobService");
+const databaseService_1 = require("./services/databaseService");
 const PORT = parseInt(process.env.PORT || String(config_1.config.port), 10);
+// Initialize database (creates tables if not exist)
+(0, databaseService_1.getDb)();
+console.log('[Database] SQLite initialized at printbox.db');
 const server = app_1.default.listen(PORT, '0.0.0.0', () => {
     console.log('====================================================');
     console.log(`🖨️  PrintBox Backend API running on port ${PORT}`);

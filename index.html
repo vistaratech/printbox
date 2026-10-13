@@ -27,6 +27,13 @@
 @keyframes fl{50%{transform:translateY(-7px) rotate(-5deg)}}
 @keyframes feed{from{transform:translateY(0)}to{transform:translateY(46px)}}
 @keyframes ring{from{box-shadow:0 0 0 0 rgba(230,0,126,.5)}to{box-shadow:0 0 0 9px rgba(230,0,126,0)}}
+@keyframes mascot-bob{0%,100%{transform:translateY(0) rotate(-1deg)}50%{transform:translateY(-8px) rotate(1deg)}}
+@keyframes mascot-blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.12)}}
+@keyframes mascot-wave{0%,100%{transform:rotate(-18deg)}45%{transform:rotate(18deg)}}
+@keyframes bubble-pop{0%,100%{transform:translateY(0) scale(1);opacity:.78}50%{transform:translateY(-9px) scale(1.08);opacity:1}}
+@keyframes paper-fly{0%{transform:translate(-20px,28px) rotate(-18deg);opacity:0}25%{opacity:1}100%{transform:translate(132px,-44px) rotate(18deg);opacity:0}}
+@keyframes bot-scan{0%,100%{transform:translateX(-10px);opacity:.25}50%{transform:translateX(46px);opacity:1}}
+@keyframes coin-spin{0%{transform:rotateY(0) translateY(0)}50%{transform:rotateY(180deg) translateY(-8px)}100%{transform:rotateY(360deg) translateY(0)}}
 
 :root{
   --bg:#efeaff;--pn:#fff;--tx:#16112b;--mu:#6a6585;--ln:#e0d9f7;
@@ -52,6 +59,9 @@ body{
 .wrap{max-width:480px;margin:0 auto;padding:14px 16px 160px;position:relative;z-index:1}
 button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid var(--c);outline-offset:2px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+.ico{--i:"";display:inline-grid;place-items:center;width:24px;height:24px;border:2px solid var(--bd);border-radius:9px;background:var(--y);color:#16112b;box-shadow:2px 2px 0 var(--bd);font-weight:800;font-size:11px;line-height:1;vertical-align:middle;flex:none}.ico::before{content:var(--i)}
+.ico.sm{width:19px;height:19px;border-radius:7px;font-size:9px;border-width:1.5px;box-shadow:1px 1px 0 var(--bd)}.ico.lg{width:42px;height:42px;border-radius:15px;font-size:16px}.ico.fast{--i:"F";background:var(--y)}.ico.lock{--i:"L";background:var(--m);color:#fff}.ico.smart{--i:"S";background:var(--ok);color:#fff}.ico.attach{--i:"+";background:var(--c);font-size:23px}.ico.idea{--i:"i";background:var(--y);font-size:17px}.ico.card{--i:"C";background:#e8f0fe;color:#1a73e8}.ico.wallet{--i:"W";background:#f3e8fd;color:#5f259f}.ico.phone{--i:"UPI";width:34px;background:var(--c)}.ico.shield{--i:"OK";background:var(--ok);color:#fff}.ico.copy{--i:"CP";background:var(--soft)}.ico.print{--i:"PR";background:var(--c)}.ico.music{--i:"ON";background:var(--c)}.ico.muted{--i:"OFF";background:var(--ln)}.ico.theme-ic{--i:"TH";background:var(--y)}.ico.plug{--i:"!";background:var(--m);color:#fff}.ico.done{--i:"OK";background:var(--ok);color:#fff}
 
 /* Header */
 .top{display:flex;align-items:center;gap:10px;margin-bottom:14px}
@@ -60,8 +70,9 @@ button:focus-visible,input:focus-visible,label:focus-within{outline:2px solid va
 .logo i{border-radius:50%;transition:transform .3s}.logo i:nth-child(1){background:var(--c)}.logo i:nth-child(2){background:var(--m)}.logo i:nth-child(3){background:var(--y)}.logo i:nth-child(4){background:var(--tx)}
 .top:hover .logo i{transform:scale(1.15)}
 h1{font-size:24px;font-weight:800;letter-spacing:-.8px}
-.mach{margin-left:auto;font-size:12px;color:var(--mu);text-align:right;line-height:1.3}
+.mach{margin-left:auto;font-size:12px;color:var(--mu);text-align:right;line-height:1.3;padding:6px 8px;border:1.5px solid transparent;border-radius:12px;transition:background .25s,border-color .25s}
 .mach b{color:var(--ok)}
+.mach.offline{background:#fff0f6;border-color:var(--m)}.mach.offline b{color:var(--m)}
 .dot-radar{display:inline-block;width:7px;height:7px;border-radius:50%;background:var(--ok);margin-right:4px;vertical-align:middle;box-shadow:0 0 0 0 rgba(20,184,106,.8);animation:radar 1.8s infinite}
 .theme{width:36px;height:36px;border-radius:50%;background:var(--pn);border:2px solid var(--bd);box-shadow:2px 2px 0 var(--bd);font-size:15px;display:grid;place-items:center;transition:transform .3s cubic-bezier(.3,1.4,.5,1),box-shadow .2s;flex:none}
 .theme:hover{transform:rotate(25deg) scale(1.08);box-shadow:3px 3px 0 var(--bd)}
@@ -81,9 +92,28 @@ h1{font-size:24px;font-weight:800;letter-spacing:-.8px}
 /* Headings & Panels */
 h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;background:linear-gradient(135deg,var(--tx) 0%,var(--m) 40%,var(--c) 60%,var(--tx) 100%);background-size:300% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:shimmer 6s linear infinite}
 .sub{font-size:15.5px;color:var(--mu);margin-bottom:16px}
+.trust{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:12px 0 16px}
+.trust span,.qcard,.insight,.security{border:2px solid var(--bd);border-radius:15px;background:var(--pn);box-shadow:3px 3px 0 var(--bd)}
+.trust span{padding:8px 7px;text-align:center;font-weight:800;font-size:12px;color:var(--tx)}
+.trust small{display:block;color:var(--mu);font-weight:600;font-size:11px;margin-top:2px}
 .panel,.proof,.pc{border:2px solid var(--bd);border-radius:18px;box-shadow:4px 4px 0 var(--sh);transition:transform .25s cubic-bezier(.3,1.3,.5,1),box-shadow .25s}
 .panel{background:var(--pn);padding:6px 16px;margin-bottom:14px}
 .panel:hover{transform:translate(-1px,-1px);box-shadow:5px 5px 0 var(--sh)}
+
+/* Animated character system */
+.guide-card{position:relative;display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center;padding:12px 13px;margin:10px 0 14px;border:2px solid var(--bd);border-radius:22px;background:linear-gradient(135deg,var(--pn),var(--soft));box-shadow:4px 4px 0 var(--sh);overflow:hidden}
+.guide-card::after{content:"";position:absolute;right:-34px;top:-34px;width:96px;height:96px;border-radius:50%;background:linear-gradient(135deg,var(--y),var(--m));opacity:.18}
+.guide-copy{position:relative;z-index:1}.guide-copy b{display:block;font-size:16px}.guide-copy small{display:block;color:var(--mu);font-size:12.5px;margin-top:2px}
+.mascot{position:relative;width:86px;height:92px;flex:none;animation:mascot-bob 3.2s ease-in-out infinite;filter:drop-shadow(3px 5px 0 rgba(22,17,43,.22))}
+.mascot .head{position:absolute;left:14px;top:9px;width:58px;height:48px;border:2px solid var(--bd);border-radius:22px 22px 18px 18px;background:var(--y);z-index:2}
+.mascot .face{position:absolute;inset:15px 10px auto;display:flex;justify-content:space-between}.mascot .eye{width:8px;height:9px;border-radius:50%;background:#16112b;animation:mascot-blink 4s infinite;transform-origin:center}.mascot .smile{position:absolute;left:50%;bottom:9px;width:18px;height:9px;border:2px solid #16112b;border-top:0;border-radius:0 0 18px 18px;transform:translateX(-50%)}
+.mascot .body{position:absolute;left:21px;top:51px;width:45px;height:32px;border:2px solid var(--bd);border-radius:15px;background:var(--c)}
+.mascot .arm{position:absolute;top:50px;width:18px;height:8px;border:2px solid var(--bd);border-radius:12px;background:var(--m);transform-origin:right center}.mascot .arm.l{left:7px}.mascot .arm.r{right:8px;transform-origin:left center;animation:mascot-wave 1.5s ease-in-out infinite}
+.mascot .leg{position:absolute;bottom:2px;width:13px;height:13px;border:2px solid var(--bd);border-radius:50%;background:var(--tx)}.mascot .leg.l{left:27px}.mascot .leg.r{right:27px}
+.mascot .bubble{position:absolute;border:2px solid var(--bd);border-radius:12px;background:var(--pn);box-shadow:2px 2px 0 var(--bd);display:grid;place-items:center;font-size:13px;font-weight:800;animation:bubble-pop 2.4s ease-in-out infinite}.mascot .bubble.a{right:0;top:0;width:25px;height:23px}.mascot .bubble.b{left:0;top:22px;width:22px;height:20px;animation-delay:.45s}
+.mascot.printbot .head{background:var(--c);border-radius:16px}.mascot.printbot .body{background:var(--pn);height:36px}.mascot.printbot .body::after{content:"";position:absolute;left:8px;right:8px;bottom:-14px;height:18px;border:2px solid var(--bd);border-radius:3px;background:linear-gradient(var(--pn),var(--soft))}.mascot.printbot .smile{height:3px;border-top:2px solid #16112b;border-bottom:0;border-radius:0}.mascot.printbot .scan{position:absolute;left:18px;top:64px;width:24px;height:4px;border-radius:8px;background:var(--m);box-shadow:0 0 10px var(--m);animation:bot-scan 1.25s ease-in-out infinite;z-index:4}
+.mascot.paypal .head{background:var(--m)}.mascot.paypal .body{background:var(--y)}.mascot.paypal .coin{position:absolute;right:0;bottom:11px;width:25px;height:25px;border:2px solid var(--bd);border-radius:50%;background:var(--y);display:grid;place-items:center;color:#16112b;font-weight:800;animation:coin-spin 1.9s ease-in-out infinite}
+.paper-trail{position:absolute;inset:0;pointer-events:none}.paper-trail i{position:absolute;width:24px;height:31px;border:2px solid var(--bd);border-radius:4px;background:var(--pn);box-shadow:2px 2px 0 var(--bd);animation:paper-fly 2.8s linear infinite}.paper-trail i:nth-child(2){animation-delay:.8s;top:18px}.paper-trail i:nth-child(3){animation-delay:1.65s;top:5px}
 
 /* File Drop Zone */
 .drop{display:block;border:2.5px dashed var(--bd);border-radius:22px;padding:34px 16px;text-align:center;background:var(--pn);cursor:pointer;position:relative;overflow:hidden;box-shadow:5px 5px 0 var(--sh);transition:transform .2s cubic-bezier(.3,1.2,.5,1),box-shadow .2s,border-color .2s}
@@ -96,6 +126,10 @@ h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;backgrou
 .fmt{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
 .fmt em{font-style:normal;font-size:12px;padding:4px 10px;border-radius:20px;border:1.5px solid var(--bd);background:var(--pn);color:var(--tx);font-weight:700;transition:transform .15s}
 .fmt em:hover{transform:scale(1.1) rotate(2deg)}
+.quick{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:14px 0}
+.qcard{padding:12px;min-height:74px;position:relative;overflow:hidden}
+.qcard::after{content:"";position:absolute;right:-16px;bottom:-18px;width:58px;height:58px;border-radius:50%;background:var(--soft);opacity:.85}
+.qcard b{display:block;font-size:14px;margin-bottom:2px}.qcard small{color:var(--mu);font-size:12px;position:relative;z-index:1}
 
 /* File details card */
 .file{display:flex;gap:12px;align-items:center;padding:12px 0}
@@ -130,6 +164,9 @@ h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;backgrou
 .proof::before,.proof::after{content:"";position:absolute;width:14px;height:14px;border:solid #16112b;opacity:.5}
 .proof::before{top:8px;left:8px;border-width:2px 0 0 2px}.proof::after{bottom:8px;right:8px;border-width:0 2px 2px 0}
 .proof p{color:#16112b;font-size:13px}.proof p b{display:block;font-size:16px;margin-bottom:2px}
+.insight{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center;padding:12px 14px;margin:-2px 0 14px;background:linear-gradient(135deg,var(--pn),var(--soft))}
+.insight .badge{width:38px;height:38px;border-radius:13px;border:2px solid var(--bd);display:grid;place-items:center;background:var(--y);box-shadow:2px 2px 0 var(--bd)}
+.insight b{display:block;font-size:14px}.insight small{display:block;color:var(--mu);font-size:12.5px}
 .sheet{background:var(--pp);width:96px;aspect-ratio:1/1.414;border:2px solid #16112b;border-radius:4px;box-shadow:3px 3px 0 #16112b;padding:7px;transition:width .3s ease,aspect-ratio .3s ease,transform .35s cubic-bezier(.3,1.4,.5,1),box-shadow .35s;flex:none;overflow:hidden;transform-style:preserve-3d}
 .sheet.flipping{animation:flip-sheet .4s cubic-bezier(.3,1.3,.5,1)}
 .sheet.landscape{width:136px;aspect-ratio:1.414/1}
@@ -161,10 +198,14 @@ h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;backgrou
 .kv{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid var(--ln)}
 .kv:first-child{border-top:0}.kv span:first-child{color:var(--mu)}.kv b{text-align:right}
 .kv.tot{font-size:20px;font-weight:800}.kv.tot span:first-child{color:var(--tx)}
+.estimate{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:2px 0 12px}
+.estimate div{background:var(--bg);border:1.5px solid var(--ln);border-radius:12px;padding:9px 10px}.estimate small{display:block;color:var(--mu);font-size:11px}.estimate b{font-size:15px}
 
 /* Payment Methods & UPI QR Simulation */
 .pay{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 0}
-.pay button{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-radius:12px;border:2px solid var(--bd);box-shadow:2px 2px 0 var(--bd);font-weight:700;transition:transform .15s,box-shadow .15s,border-color .15s;text-align:left}
+.pay-title{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-top:12px;font-weight:800}.pay-title small{color:var(--mu);font-weight:700}
+.pay button{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:12px 14px;border-radius:12px;border:2px solid var(--bd);box-shadow:2px 2px 0 var(--bd);font-weight:800;transition:transform .15s,box-shadow .15s,border-color .15s;text-align:left}
+.pay button small{display:block;font-size:11px;color:inherit;opacity:.72;font-weight:700;margin-top:1px}
 .pay button:not(:disabled):hover{transform:translate(-1px,-1px);box-shadow:3px 3px 0 var(--bd)}
 .pay button:not(:disabled):active{transform:translate(2px,2px);box-shadow:0 0 0 var(--bd)}
 .pay button.on{border-color:var(--bd);background:var(--y);color:#16112b}
@@ -182,6 +223,8 @@ h2{font-size:34px;line-height:1;letter-spacing:-1.2px;margin-bottom:8px;backgrou
 .qr-sub{font-size:12.5px;color:var(--mu);margin-top:8px}
 .qr-sub b{color:var(--tx)}
 .note{font-size:12.5px;color:var(--mu);padding-top:10px;padding-bottom:6px}
+.security{display:flex;gap:10px;align-items:flex-start;padding:11px 12px;margin-top:10px;background:var(--soft);box-shadow:2px 2px 0 var(--bd)}
+.security b{display:block;font-size:13.5px}.security small{display:block;color:var(--mu);font-size:12px}
 
 /* Bottom Floating Bar */
 .bar{position:fixed;left:0;right:0;bottom:0;border-top:2px solid var(--bd);background:rgba(from var(--pn) r g b/.88);backdrop-filter:blur(20px) saturate(1.8);-webkit-backdrop-filter:blur(20px) saturate(1.8);padding:12px 16px calc(12px + env(safe-area-inset-bottom,0px));z-index:10}
@@ -256,31 +299,36 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
 #cf{position:fixed;inset:0;pointer-events:none;z-index:40;overflow:hidden}
 
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important;animation:none!important}}
+@media(max-width:380px){.pay,.quick{grid-template-columns:1fr}.trust{grid-template-columns:1fr}.mach{display:none}.btn{padding-left:18px;padding-right:18px}}
 </style></head><body>
 <div id="toast" class="toast hide"></div>
 <div class="wrap">
  <div class="top"><div class="logo"><i></i><i></i><i></i><i></i></div><h1>PrintBox</h1>
-  <div class="mach">Machine M-01, Library Block<br><span class="dot-radar"></span><b>Online</b> · A4 paper: 420 sheets</div>
-  <button class="theme" id="snd" aria-label="Toggle sound" title="Sound Effects">🔊</button>
-  <button class="theme" id="th" aria-label="Switch theme" title="Toggle theme">🌓</button></div>
+   <div class="mach" id="mach">Machine M-01, Library Block<br><span class="dot-radar"></span><b>Online</b> · A4 paper: 420 sheets</div>
+  <button class="theme" id="snd" aria-label="Toggle sound" title="Sound Effects"><span class="ico sm music"></span></button>
+  <button class="theme" id="th" aria-label="Switch theme" title="Toggle theme"><span class="ico sm theme-ic"></span></button></div>
  <div class="steps" id="steps"><span></span><span></span><span></span><span></span></div><div class="sn" id="sn"></div>
 
  <section id="s1">
-  <div class="hero" id="hero"></div><h2>Print it. Grab it. Go.</h2><p class="sub">No queue, no login. Upload from your phone and collect it at the machine.</p>
+   <div class="hero" id="hero"></div><h2>Print it. Grab it. Go.</h2><p class="sub">No queue, no login. Upload from your phone and collect it at the machine.</p>
+   <div class="guide-card"><div class="mascot" aria-hidden="true"><span class="bubble a">Hi</span><span class="bubble b"><i class="ico sm attach"></i></span><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>PrintBox buddy ready!</b><small>File upload pannunga — naan price, pages, pickup status ellam guide panren.</small></div><div class="paper-trail" aria-hidden="true"><i></i><i></i><i></i></div></div>
+   <div class="trust" aria-label="PrintBox benefits"><span><i class="ico sm fast"></i> Fast<small>~30 sec setup</small></span><span><i class="ico sm lock"></i> Private<small>Auto cleanup</small></span><span><i class="ico sm smart"></i> Smart<small>Paper saver</small></span></div>
   <label class="drop" id="dz"><input type="file" id="fi" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt">
-   <big>📎</big><b>Tap to pick your file</b><small>Assignment, notes, slides, photos. Anything.</small>
-   <div class="fmt"><em>PDF</em><em>Word</em><em>PowerPoint</em><em>JPG / PNG</em><em>Text</em></div></label>
+    <big><span class="ico lg attach"></span></big><b>Tap to pick your file</b><small>Assignment, notes, slides, photos. Anything.</small>
+    <div class="fmt"><em>PDF</em><em>Word</em><em>PowerPoint</em><em>JPG / PNG</em><em>Text</em></div></label>
+   <div class="quick"><div class="qcard"><b>1. Upload safely</b><small>Your document is prepared for this kiosk session.</small></div><div class="qcard"><b>2. Pay & collect</b><small>Use UPI, then pick up pages at this kiosk.</small></div></div>
   <div id="fcard" class="hide">
-   <div class="panel"><div class="file"><span class="ic" id="fic"></span><div><div class="nm" id="fnm"></div><small id="fsz"></small></div><button class="x" id="fx" aria-label="Remove file">✕</button></div>
+   <div class="panel"><div class="file"><span class="ic" id="fic"></span><div><div class="nm" id="fnm"></div><small id="fsz"></small></div><button class="x" id="fx" aria-label="Remove file">X</button></div>
     <div class="row"><span class="l">Total pages<small id="pgn">Edit if this looks wrong</small></span>
      <div class="step"><button data-pg="-1">−</button><input type="number" id="pgs" min="1" max="500" value="1"><button data-pg="1">+</button></div></div><div class="row"><span class="l">Edit before printing<small>Remove, rotate or reorder pages</small></span><button class="btn sm" id="ed">Edit</button></div></div>
   </div>
  </section>
 
- <section id="s2" class="hide">
-  <h2>Tweak it</h2><p class="sub">Grab a preset or fine-tune. Price updates live.</p><div class="pre" id="pre"><button data-p="a">📝 Assignment</button><button data-p="n">📚 Notes</button><button data-p="s">🖥️ Slides</button><button data-p="p">🖼️ Photo</button></div>
+  <section id="s2" class="hide">
+   <h2>Tweak it</h2><p class="sub">Grab a preset or fine-tune. Price updates live.</p><div class="guide-card"><div class="mascot printbot" aria-hidden="true"><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="scan"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>Layout scanner online</b><small>Double-side, pages per sheet, quality change pannumbodhu live preview animate aagum.</small></div></div><div class="pre" id="pre"><button data-p="a"><i class="ico sm attach"></i> Assignment</button><button data-p="n"><i class="ico sm smart"></i> Notes</button><button data-p="s"><i class="ico sm fast"></i> Slides</button><button data-p="p"><i class="ico sm idea"></i> Photo</button></div>
   <div class="proof"><div class="sheet bw" id="sheet"><div class="pg" id="pg"></div></div>
-   <p><b id="pv1"></b><span id="pv2"></span></p></div>
+    <p><b id="pv1"></b><span id="pv2"></span></p></div>
+   <div class="insight" id="insight"><span class="badge"><i class="ico idea"></i></span><div><b>Smart recommendation</b><small>Upload a file to see print tips.</small></div></div>
   <div class="panel">
    <div class="row"><span class="l">Colour</span><div class="seg col" data-k="color"><button data-v="bw" class="on">Black &amp; white</button><button data-v="color">Colour</button></div></div>
    <div class="row"><span class="l">Sides</span><div class="seg" data-k="sides"><button data-v="single" class="on">Single</button><button data-v="double">Double</button></div></div>
@@ -301,14 +349,14 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
   </div>
  </section>
 
- <section id="s3" class="hide">
-  <h2>Pay and print</h2><p class="sub">Check the details. Printing starts right after you pay.</p>
+  <section id="s3" class="hide">
+   <h2>Pay and print</h2><p class="sub">Check the details. Printing starts right after you pay.</p><div class="guide-card"><div class="mascot paypal" aria-hidden="true"><span class="coin">₹</span><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>UPI payment</b><small>Amount verify pannitu print queue-ku send pannuvom.</small></div></div>
   <div class="panel" id="sum"></div>
-  <div class="panel"><div style="padding-top:12px;font-weight:700">Pay with</div>
-   <div class="pay" id="pay"><button data-p="gpay" class="on">Google Pay</button><button data-p="phonepe">PhonePe</button><button data-p="paytm">Paytm</button><button data-p="upi">Other UPI ID</button>
-    <button disabled>Card (soon)</button><button disabled>Wallet (soon)</button></div>
+   <div class="panel"><div class="pay-title"><span>Pay with</span><small id="eta">Ready soon</small></div>
+    <div class="pay" id="pay"><button data-p="gpay" class="on"><span>Google Pay<small>UPI app</small></span>GPay</button><button data-p="phonepe"><span>PhonePe<small>UPI app</small></span>Pe</button><button data-p="paytm"><span>Paytm<small>UPI app</small></span>Pay</button><button data-p="upi"><span>Other UPI ID<small>Any bank app</small></span>UPI</button>
+     <button disabled><span>Card<small>Coming soon</small></span><i class="ico sm card"></i></button><button disabled><span>Wallet<small>Coming soon</small></span><i class="ico sm wallet"></i></button></div>
    <div class="qr-box" id="qrbox">
-    <div class="qr-head"><span>📱 Instant UPI QR Code</span><span class="qr-badge">LIVE DEMO</span></div>
+    <div class="qr-head"><span><i class="ico sm phone"></i> Instant UPI QR Code</span><span class="qr-badge">UPI</span></div>
     <div class="qr-wrap">
      <div class="qr-laser"></div>
      <svg class="qr-svg" viewBox="0 0 100 100" width="120" height="120">
@@ -325,16 +373,18 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
      </svg>
     </div>
     <p class="qr-sub">Scan with any UPI app to pay <b id="qrpayamt">₹0.00</b></p>
-   </div>
-   <p class="note">Demo mode: no money is charged. Real payments come in the next version.</p></div>
+    </div>
+    <div class="security"><span><i class="ico shield"></i></span><div><b>Secure payment</b><small>Payment is verified before printing starts. In production this screen connects to a verified UPI payment gateway.</small></div></div>
+    <p class="note">Payment is required before printing starts.</p></div>
  </section>
 
- <section id="s4" class="hide">
+  <section id="s4" class="hide">
+   <div class="guide-card"><div class="mascot printbot" aria-hidden="true"><span class="bubble a">Go</span><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="scan"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>Printer bot is working</b><small>Progress live-a update aagum. Job code copy pannitu tray-la pages collect pannunga.</small></div></div>
   <svg class="prn" id="prn" viewBox="0 0 200 140" aria-hidden="true"><defs><clipPath id="cp"><rect x="0" y="82" width="200" height="58"/></clipPath><linearGradient id="pg1"><stop offset="0" stop-color="#0098c9"/><stop offset=".5" stop-color="#e6007e"/><stop offset="1" stop-color="#ffd400"/></linearGradient></defs><g clip-path="url(#cp)"><g class="paper"><rect class="pa" x="58" y="12" width="84" height="72" rx="3"/><rect class="ln" x="68" y="24" width="64" height="5" rx="2"/><rect class="ln" x="68" y="35" width="44" height="5" rx="2"/><rect class="ln" x="68" y="46" width="58" height="5" rx="2"/><rect x="68" y="58" width="64" height="16" rx="3" fill="url(#pg1)"/></g></g><rect class="bd" x="18" y="36" width="164" height="48" rx="14"/><rect class="sl" x="50" y="72" width="100" height="6" rx="3"/><circle class="led" cx="162" cy="52" r="4"/></svg>
   <h2 id="s4h" style="text-align:center"></h2><div class="cnt" id="pcnt"></div><p class="sub" style="text-align:center;margin-top:10px">Your job code</p>
   <div class="job-wrap">
    <div class="job" id="jc" role="button" tabindex="0" title="Click to copy code"></div>
-   <button class="job-copy-btn" id="cpbtn">📋 Tap code to copy</button>
+   <button class="job-copy-btn" id="cpbtn"><i class="ico sm copy"></i> Tap code to copy</button>
   </div>
   <p class="sub" style="text-align:center">Keep this if the machine asks for it.</p>
   <div class="prog"><i id="pb"></i></div>
@@ -342,6 +392,14 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
   <p class="note hide" id="done" style="text-align:center;font-size:15px;color:var(--ok);font-weight:700">Take your pages from the tray, then run to class!</p>
   <button class="btn hide" id="again" style="width:100%">Print another file</button>
  </section>
+</div>
+
+<div style="text-align:center;margin-top:24px;padding:14px;border:2px solid var(--bd);border-radius:16px;background:var(--pn);box-shadow:3px 3px 0 var(--bd)">
+  <div style="font-weight:800;margin-bottom:6px">PrintBox Control Center</div>
+  <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+    <a href="/admin" style="text-decoration:none"><button class="btn sm ghost" style="width:100%">Admin Dashboard</button></a>
+    <a href="/kiosk" style="text-decoration:none"><button class="btn sm ghost" style="width:100%">Kiosk Screen</button></a>
+  </div>
 </div>
 
 <div id="cf"></div>
@@ -393,7 +451,7 @@ const Snd=(function(){
 })();
 
 // ── Toast Notification Helper ──
-function toast(msg,ico='✨'){
+function toast(msg,ico='<span class="ico sm idea"></span>'){
   let t=$('#toast');if(!t)return;
   t.innerHTML=`<span>${ico}</span><span>${msg}</span>`;
   t.classList.remove('hide');
@@ -402,21 +460,33 @@ function toast(msg,ico='✨'){
 }
 
 // Sound toggle button wiring
-if($('#snd')){$('#snd').textContent=Snd.on?'🔊':'🔇';$('#snd').onclick=()=>{
+const soundIcon=()=>'<span class="ico sm '+(Snd.on?'music':'muted')+'"></span>';
+if($('#snd')){$('#snd').innerHTML=soundIcon();$('#snd').onclick=()=>{
   const on=Snd.toggle();
-  $('#snd').textContent=on?'🔊':'🔇';
-  toast(on?'Sound Effects ON 🔊':'Sound Effects Muted 🔇','🎵');
+  $('#snd').innerHTML=soundIcon();
+  toast(on?'Sound effects on':'Sound effects muted','<span class="ico sm '+(on?'music':'muted')+'"></span>');
   if(on)Snd.pop();
 }}
 
-async function checkMachineStatus(){try{const r=await fetch(API_BASE+'/machines/M-01');if(r.ok){const d=await r.json();if(d.machine)$('.mach').innerHTML=`${d.machine.name}, ${d.machine.location}<br><span class="dot-radar"></span><b>${d.machine.isOnline?'Online':'Offline'}</b> · Paper: ${d.machine.paperRemaining} sheets`}}catch(e){}}
+async function checkMachineStatus(){try{const r=await fetch(API_BASE+'/machines/M-01');if(r.ok){const d=await r.json();if(d.machine){const m=$('#mach')||$('.mach');m.classList.toggle('offline',!d.machine.isOnline||d.machine.paperRemaining<25);m.innerHTML=`${d.machine.name}, ${d.machine.location}<br><span class="dot-radar"></span><b>${d.machine.isOnline?'Online':'Offline'}</b> · Paper: ${d.machine.paperRemaining} sheets`}}}catch(e){}}
 checkMachineStatus();
 
 const money=x=>'₹'+x.toFixed(2);
 function count(){if(S.range!=='custom')return S.pages;const set=new Set();S.rt.split(',').forEach(p=>{const m=p.trim().match(/^(\d+)(?:-(\d+))?$/);if(!m)return;let a=+m[1],b=+(m[2]||m[1]);if(a>b)[a,b]=[b,a];for(let i=Math.max(a,1);i<=Math.min(b,S.pages);i++)set.add(i)});return set.size}
 function calc(){const n=count(),sheets=Math.ceil(n/S.pps),paper=(S.sides==='double'?Math.ceil(sheets/2):sheets)*S.copies;
  let ps=(S.color==='color'?5:1)*({A5:0.8,A4:1,A3:2,Legal:1.2}[S.size]||1)+(S.quality==='high'?.5:0);if(S.sides==='double')ps*=.9;
- const pr=sheets*S.copies*ps,st=S.staple?2*S.copies:0;return{n,paper,pr,st,total:pr+st,ps}}
+  const pr=sheets*S.copies*ps,st=S.staple?2*S.copies:0;return{n,paper,pr,st,total:pr+st,ps}}
+
+function eta(c){const seconds=Math.max(18,Math.round(c.paper*(S.color==='color'?5.5:3.2)+(S.quality==='high'?12:0)+18));return seconds<60?'~'+seconds+' sec':'~'+Math.ceil(seconds/60)+' min'}
+function smartTip(c,savings){
+  if(!S.file)return ['Smart recommendation','Upload a file to see print tips.'];
+  if(S.range==='custom'&&!c.n)return ['Check page range','Use a format like 1-5, 8, 11-13 before continuing.'];
+  if(S.color==='color'&&c.n>8)return ['Save money','Switch to black & white for notes and long assignments.'];
+  if(S.sides==='single'&&c.n>1)return ['Save paper','Double-sided printing can cut sheet use for this job.'];
+  if(S.pps===1&&c.n>=12)return ['Good for notes','Try 2 or 4 pages per sheet to make a compact handout.'];
+  if(savings>0)return ['Eco win','This setup saves '+savings+' sheet'+(savings>1?'s':'')+' versus simple one-sided printing.'];
+  return ['Looks ready','Your settings are balanced for a clean, quick print.'];
+}
 
 let tv=0,raf,TH={},pdfDoc=null,E=[],IMG=false;
 const PJ='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/';
@@ -452,14 +522,14 @@ if(pf){
 const tf=p=>'rotate('+p.r+'deg) scale('+(p.r%180?.707:1)+')';
 const imgF=s=>(s.f==='bw'?'grayscale(1) ':'')+(s.f==='sharp'?'contrast(1.35) ':'')+'brightness('+s.b/100+')';
 function card(p,k){const d=document.createElement('div');d.className='pc'+(p.d?' del':'');d.dataset.i=p.i;
- d.innerHTML='<span class="no">'+(k+1)+'</span><div class="pw"></div><div class="ct"><button data-a="L" aria-label="Move earlier">◀</button><button data-a="R" aria-label="Rotate page">↻</button><button data-a="D" aria-label="Remove or restore page">'+(p.d?'↩':'🗑')+'</button><button data-a="N" aria-label="Move later">▶</button></div>';
+ d.innerHTML='<span class="no">'+(k+1)+'</span><div class="pw"></div><div class="ct"><button data-a="L" aria-label="Move earlier">◀</button><button data-a="R" aria-label="Rotate page">↻</button><button data-a="D" aria-label="Remove or restore page">'+(p.d?'Restore':'Del')+'</button><button data-a="N" aria-label="Move later">▶</button></div>';
  const el=TH[p.i]||Object.assign(document.createElement('div'),{className:'ph',textContent:p.i});el.style.transform=tf(p);d.querySelector('.pw').appendChild(el);return d}
 function cnt(){const k=E.filter(p=>!p.d).length;$('#ovt').textContent=k+' of '+E.length+' pages';$('#ovs').disabled=!k}
 function draw(){const g=$('#grid'),o={};g.querySelectorAll('.pc').forEach(c=>o[c.dataset.i]=c.getBoundingClientRect());g.innerHTML='';E.forEach((p,k)=>g.appendChild(card(p,k)));
  if(!RM)g.querySelectorAll('.pc').forEach(c=>{const a=o[c.dataset.i];if(!a)return;const n=c.getBoundingClientRect(),x=a.left-n.left,y=a.top-n.top;if(x||y)c.animate([{transform:'translate('+x+'px,'+y+'px)'},{transform:'none'}],{duration:400,easing:'cubic-bezier(.3,1.2,.5,1)'})});cnt()}
 $('#ovb').onclick=e=>{const b=e.target.closest('[data-a]');if(!b||IMG)return;const c=b.closest('.pc'),k=[...c.parentNode.children].indexOf(c),a=b.dataset.a,p=E[k];
  if(a==='R'){p.r+=90;c.querySelector('.pw').firstChild.style.transform=tf(p);Snd.tap()}
- else if(a==='D'){p.d=p.d?0:1;c.classList.toggle('del',!!p.d);b.textContent=p.d?'↩':'🗑';cnt();Snd.tap()}
+ else if(a==='D'){p.d=p.d?0:1;c.classList.toggle('del',!!p.d);b.textContent=p.d?'Restore':'Del';cnt();Snd.tap()}
  else{const j=a==='L'?k-1:k+1;if(j<0||j>=E.length)return;[E[k],E[j]]=[E[j],E[k]];draw();Snd.tap()}};
 const shut=()=>{$('#ov').classList.add('hide');document.body.style.overflow=''};
 $('#ovx').onclick=shut;
@@ -483,7 +553,7 @@ const clr=()=>{S.pl=null;$('#pgn').textContent='Edit if this looks wrong'};
 $('#pgs').addEventListener('input',clr);$$('[data-pg]').forEach(b=>b.addEventListener('click',clr));
 addEventListener('resize',()=>$$('.seg').forEach(pl));document.fonts&&document.fonts.ready.then(()=>$$('.seg').forEach(pl));
 
-const H=['Payment received ✅','Sending to the machine…','Printing your pages…','Pages are out!','Done! Grab your pages 🎉'];
+const H=['Payment received','Sending to the machine…','Printing your pages…','Pages are out!','Done! Grab your pages'];
 let ci;
 function ctr(k){
   clearInterval(ci);const e=$('#pcnt');$('#s4h').textContent=H[k]||'';
@@ -491,7 +561,7 @@ function ctr(k){
   const y=Math.ceil(calc().n/S.pps)*S.copies;
   if(k>2){
     e.textContent=y+' of '+y+' pages';
-    if(k===4){boom();Snd.fanfare();toast('All done! Grab your pages from the tray 🎉','🖨️')}
+    if(k===4){boom();Snd.fanfare();toast('All done! Grab your pages from the tray','<span class="ico sm print"></span>')}
     return;
   }
   let x=0;e.textContent='0 of '+y+' pages';
@@ -529,7 +599,7 @@ function sync(){$$('.seg[data-k]').forEach(g=>g.querySelectorAll('button').forEa
 $('#pre').onclick=e=>{
   const b=e.target.closest('button');if(!b)return;
   const pKey=b.dataset.p;Object.assign(S,PRE[pKey]);sync();upd();bump();
-  Snd.preset();toast('Applied '+PRE_LABELS[pKey]+' preset','⚡');
+  Snd.preset();toast('Applied '+PRE_LABELS[pKey]+' preset','<span class="ico sm fast"></span>');
   $$('#pre button').forEach(x=>x.classList.toggle('on',x===b));
 };
 
@@ -542,11 +612,14 @@ function upd(){
  g.innerHTML=Array(S.pps).fill('<i><b></b><b></b><b></b><b></b><u></u></i>').join('');
  $('#pv1').textContent=c.n+' page'+(c.n>1?'s':'')+' × '+S.copies+' cop'+(S.copies>1?'ies':'y')+' · '+S.size;
  const savings=c.n*S.copies-c.paper;
- $('#pv2').innerHTML=(S.color==='bw'?'Black & white':'Colour')+', '+(S.sides==='double'?'both sides':'one side')+', '+S.size+'. Uses '+c.paper+' sheet'+(c.paper>1?'s':'')+(savings>0?' · <span class="leaf">🌱</span> saves '+savings+' sheet'+(savings>1?'s':''):'')+'.';
- $('#nx').disabled=S.step===1?!S.file:(S.step===2?c.n<1:false);
- $('#rt').classList.toggle('hide',S.range!=='custom');
- if($('#qrpayamt'))$('#qrpayamt').textContent=money(c.total);
- $('#sum').innerHTML=[['File',(S.file?S.file.name:'-')+(S.pl||S.img?' (edited)':'')],['Pages',c.n+' × '+S.copies+' cop'+(S.copies>1?'ies':'y')],['Print',(S.color==='bw'?'B&W':'Colour')+' · '+(S.sides==='double'?'Double':'Single')+' · '+S.size+' · '+S.orient],['Layout',S.pps+' per sheet · '+S.quality+(S.staple?' · stapled':'')],['Paper used',c.paper+' sheet'+(c.paper>1?'s':'')],['Printing',money(c.pr)],['Staple',money(c.st)]].map(r=>'<div class="kv"><span>'+r[0]+'</span><b>'+r[1].replace(/</g,'&lt;')+'</b></div>').join('')+'<div class="kv tot"><span>Total</span><b>'+money(c.total)+'</b></div>';
+  $('#pv2').innerHTML=(S.color==='bw'?'Black & white':'Colour')+', '+(S.sides==='double'?'both sides':'one side')+', '+S.size+'. Uses '+c.paper+' sheet'+(c.paper>1?'s':'')+(savings>0?' · <span class="leaf"><i class="ico sm smart"></i></span> saves '+savings+' sheet'+(savings>1?'s':''):'')+'.';
+  const tip=smartTip(c,savings),ins=$('#insight');
+  if(ins)ins.innerHTML='<span class="badge"><i class="ico idea"></i></span><div><b>'+tip[0]+'</b><small>'+tip[1]+'</small></div>';
+  $('#nx').disabled=S.step===1?!S.file:(S.step===2?c.n<1:false);
+  $('#rt').classList.toggle('hide',S.range!=='custom');
+  if($('#qrpayamt'))$('#qrpayamt').textContent=money(c.total);
+  if($('#eta'))$('#eta').textContent='Estimated '+eta(c);
+  $('#sum').innerHTML='<div class="estimate"><div><small>Ready in</small><b>'+eta(c)+'</b></div><div><small>Sheets used</small><b>'+c.paper+'</b></div></div>'+[['File',(S.file?S.file.name:'-')+(S.pl||S.img?' (edited)':'')],['Pages',c.n+' × '+S.copies+' cop'+(S.copies>1?'ies':'y')],['Print',(S.color==='bw'?'B&W':'Colour')+' · '+(S.sides==='double'?'Double':'Single')+' · '+S.size+' · '+S.orient],['Layout',S.pps+' per sheet · '+S.quality+(S.staple?' · stapled':'')],['Paper used',c.paper+' sheet'+(c.paper>1?'s':'')],['Printing',money(c.pr)],['Staple',money(c.st)]].map(r=>'<div class="kv"><span>'+r[0]+'</span><b>'+r[1].replace(/</g,'&lt;')+'</b></div>').join('')+'<div class="kv tot"><span>Total</span><b>'+money(c.total)+'</b></div>';
 }
 
 function go(n){
@@ -570,12 +643,12 @@ async function onFile(f){
   pg=10;note='Could not count pages. Please set it.';
  }
  S.file=f;S.pages=pg;$('#pgs').value=pg;$('#pgn').textContent=note;
- $('#fic').textContent=ext==='pdf'?'📕':/docx?/.test(ext)?'📘':/pptx?/.test(ext)?'📙':/jpe?g|png|webp/.test(ext)?'🖼️':'📄';
+  $('#fic').textContent=ext==='pdf'?'PDF':/docx?/.test(ext)?'DOC':/pptx?/.test(ext)?'PPT':/jpe?g|png|webp/.test(ext)?'IMG':'TXT';
  $('#fnm').textContent=f.name;$('#fsz').textContent=(f.size/1048576>=1?(f.size/1048576).toFixed(1)+' MB':Math.max(1,Math.round(f.size/1024))+' KB');
  setTimeout(()=>{
   dz.classList.remove('scanning');
   dz.classList.add('hide');$('#fcard').classList.remove('hide');
-  toast('Loaded '+f.name+' ('+pg+' page'+(pg>1?'s':'')+')','📄');
+   toast('Loaded '+f.name+' ('+pg+' page'+(pg>1?'s':'')+')','<span class="ico sm attach"></span>');
   upd();
  },400);
  try{const fd=new FormData();fd.append('file',f);fetch(API_BASE+'/upload',{method:'POST',body:fd}).then(r=>r.ok?r.json():null).then(d=>{if(d&&d.file)S.serverFile=d.file}).catch(()=>{})}catch(x){}
@@ -624,7 +697,7 @@ $('#th').onclick=()=>{
  const r=document.documentElement,isDark=getComputedStyle(r).getPropertyValue('--bg').trim()==='#100c1f';
  r.dataset.theme=isDark?'light':'dark';
  Snd.tap();
- toast(isDark?'Switched to Light mode ☀️':'Switched to Dark mode 🌙',isDark?'☀️':'🌙');
+  toast(isDark?'Switched to light mode':'Switched to dark mode','<span class="ico sm theme-ic"></span>');
 };
 
 // ── Copy Job Code with Feedback ──
@@ -632,7 +705,7 @@ const copyJob=()=>{
  const code=$('#jc').textContent;if(!code)return;
  navigator.clipboard.writeText(code).catch(()=>{});
  Snd.pop();
- toast('Copied '+code+' to clipboard! 📋','✓');
+  toast('Copied '+code+' to clipboard','<span class="ico sm copy"></span>');
  const jc=$('#jc');
  jc.animate([{transform:'scale(1.15) rotate(3deg)'},{transform:'rotate(-2deg) scale(1)'}],{duration:300,easing:'cubic-bezier(.3,1.5,.5,1)'});
 };
@@ -642,7 +715,7 @@ if($('#cpbtn'))$('#cpbtn').onclick=copyJob;
 const ST=['Payment received','File sent to the machine','Printing your pages','Ready in the tray'];
 async function run(){
  go(4);$('#done').classList.add('hide');$('#again').classList.add('hide');Snd.pay();
- const draw=k=>{$('#stl').innerHTML=ST.map((t,i)=>'<div class="st '+(i<k?'ok':i===k?'go':'')+'"><span class="d">'+(i<k?'✓':'')+'</span>'+t+'</div>').join('');$('#pb').style.width=(k/ST.length*100)+'%';$('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));ctr(k)};
+  const draw=k=>{$('#stl').innerHTML=ST.map((t,i)=>'<div class="st '+(i<k?'ok':i===k?'go':'')+'"><span class="d">'+(i<k?'OK':'')+'</span>'+t+'</div>').join('');$('#pb').style.width=(k/ST.length*100)+'%';$('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));ctr(k)};
  if(currentEventSource){currentEventSource.close();currentEventSource=null}
  try{
   if(!S.serverFile && S.file){
@@ -652,9 +725,9 @@ async function run(){
    if(upR && upR.ok){const upD=await upR.json();if(upD&&upD.file)S.serverFile=upD.file}
   }
   if(!S.serverFile){
-   toast('Upload failed! Please check backend connection.','🔌');
-   $('#s4h').textContent='Upload Failed 🔌';
-   $('#pcnt').innerHTML='Cannot reach server at <code>'+API_BASE+'</code><br><br><a href="http://localhost:3000" style="display:inline-block;padding:8px 16px;background:var(--m);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 3px 10px rgba(255,46,147,.4)">👉 Switch to Localhost (http://localhost:3000)</a>';
+   toast('Upload failed! Please check backend connection.','<span class="ico sm plug"></span>');
+   $('#s4h').textContent='Upload Failed';
+   $('#pcnt').innerHTML='Cannot reach server at <code>'+API_BASE+'</code><br><br><a href="http://localhost:3000" style="display:inline-block;padding:8px 16px;background:var(--m);color:#fff;border-radius:10px;text-decoration:none;font-weight:700;font-size:14px;box-shadow:0 3px 10px rgba(255,46,147,.4)">Switch to Localhost (http://localhost:3000)</a>';
    $('#again').classList.remove('hide');
    return;
   }
@@ -674,8 +747,8 @@ async function run(){
    es.onerror=()=>es.close();return;
   }
  }catch(x){}
- toast('Could not connect to PrintBox Backend Server!','🔌');
- $('#s4h').textContent='Printer Offline 🔌';
+  toast('Could not connect to PrintBox Backend Server!','<span class="ico sm plug"></span>');
+  $('#s4h').textContent='Printer Offline';
  $('#pcnt').textContent='Please make sure backend machine is online';
  $('#done').classList.remove('hide');
  $('#done').textContent='Failed to connect to printer. Please check server.';
@@ -688,7 +761,7 @@ $('#again').onclick=()=>{
  $$('.seg').forEach(g=>g.querySelectorAll('button').forEach((b,i)=>b.classList.toggle('on',b.dataset.v===String(D[g.dataset.k]))));
  $('#cp').value=1;$('#rt').value='';
  $$('[data-t]').forEach(b=>{b.classList.toggle('on',D[b.dataset.t]);b.setAttribute('aria-checked',D[b.dataset.t])});
- go(1);toast('Ready for your next file!','🖨️');
+  go(1);toast('Ready for your next file!','<span class="ico sm print"></span>');
 };
 go(1);
 
@@ -703,4 +776,3 @@ go(1);
   }
 })();
 </script></body></html>
-

@@ -2,54 +2,53 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.MachineService = void 0;
 const config_1 = require("../config");
-const STALE_THRESHOLD_MS = 90 * 1000; // 90 seconds without heartbeat → offline
+const databaseService_1 = require("./databaseService");
+const STALE_THRESHOLD_MS = 90 * 1000;
 class MachineService {
-    static machines = new Map();
+    static initialized = false;
     static {
-        // Initialize default machine
-        this.machines.set(config_1.config.defaultMachineId, {
-            id: config_1.config.defaultMachineId,
-            name: `Machine ${config_1.config.defaultMachineId}`,
-            location: config_1.config.defaultMachineLocation,
-            isOnline: true,
-            paperRemaining: 420,
-            maxPaperCapacity: 500,
-            tonerLevelPercent: 88,
-            lastHeartbeat: new Date().toISOString()
-        });
+        this.ensureDefault();
     }
-    /**
-     * Check if a machine's heartbeat is stale and update isOnline accordingly
-     */
+    static ensureDefault() {
+        if (this.initialized)
+            return;
+        const existing = (0, databaseService_1.loadMachine)(config_1.config.defaultMachineId);
+        if (!existing) {
+            (0, databaseService_1.saveMachine)({
+                id: config_1.config.defaultMachineId,
+                name: `Machine ${config_1.config.defaultMachineId}`,
+                location: config_1.config.defaultMachineLocation,
+                isOnline: true,
+                paperRemaining: 420,
+                maxPaperCapacity: 500,
+                tonerLevelPercent: 88,
+                lastHeartbeat: new Date().toISOString()
+            });
+        }
+        this.initialized = true;
+    }
     static refreshOnlineStatus(machine) {
         const elapsed = Date.now() - new Date(machine.lastHeartbeat).getTime();
         machine.isOnline = elapsed < STALE_THRESHOLD_MS;
         return machine;
     }
     static getMachine(id) {
-        const machine = this.machines.get(id);
+        this.ensureDefault();
+        const machine = (0, databaseService_1.loadMachine)(id);
         if (machine)
-            this.refreshOnlineStatus(machine);
-        return machine;
+            return this.refreshOnlineStatus(machine);
+        return undefined;
     }
     static getAllMachines() {
-        return Array.from(this.machines.values()).map(m => this.refreshOnlineStatus(m));
+        this.ensureDefault();
+        const m = (0, databaseService_1.loadMachine)(config_1.config.defaultMachineId);
+        return m ? [this.refreshOnlineStatus(m)] : [];
     }
     static updateHeartbeat(id, paperRemaining, tonerPercent) {
-        let machine = this.machines.get(id);
+        this.ensureDefault();
+        let machine = (0, databaseService_1.loadMachine)(id);
         if (!machine) {
-            machine = {
-                id,
-                name: `Machine ${id}`,
-                location: 'Campus Kiosk',
-                isOnline: true,
-                paperRemaining: paperRemaining ?? 500,
-                maxPaperCapacity: 500,
-                tonerLevelPercent: tonerPercent ?? 100,
-                lastHeartbeat: new Date().toISOString()
-            };
-            this.machines.set(id, machine);
-            return machine;
+            machine = { id, name: `Machine ${id}`, location: 'Campus Kiosk', isOnline: true, paperRemaining: paperRemaining ?? 500, maxPaperCapacity: 500, tonerLevelPercent: tonerPercent ?? 100, lastHeartbeat: new Date().toISOString() };
         }
         machine.isOnline = true;
         machine.lastHeartbeat = new Date().toISOString();
@@ -57,13 +56,15 @@ class MachineService {
             machine.paperRemaining = Math.max(0, Math.floor(paperRemaining));
         if (tonerPercent !== undefined)
             machine.tonerLevelPercent = Math.max(0, Math.min(100, Math.floor(tonerPercent)));
+        (0, databaseService_1.saveMachine)(machine);
         return machine;
     }
     static deductPaper(machineId, sheets) {
-        const machine = this.machines.get(machineId);
+        const machine = (0, databaseService_1.loadMachine)(machineId);
         if (!machine)
             return false;
         machine.paperRemaining = Math.max(0, machine.paperRemaining - sheets);
+        (0, databaseService_1.saveMachine)(machine);
         return true;
     }
 }

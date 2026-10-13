@@ -1,8 +1,13 @@
 import app from './app';
 import { config } from './config';
 import { JobService } from './services/jobService';
+import { getDb } from './services/databaseService';
 
 const PORT = parseInt(process.env.PORT || String(config.port), 10);
+
+// Initialize database (creates tables if not exist)
+getDb();
+console.log('[Database] SQLite initialized at printbox.db');
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('====================================================');

@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { JobService } from '../services/jobService';
-import { config } from '../config';
+import { savePayment } from '../services/databaseService';
 
 const router = Router();
 
@@ -33,8 +33,7 @@ router.post('/create-order', (req: Request, res: Response) => {
     success: true,
     jobCode: job.jobCode,
     amount: job.pricing.totalPrice,
-    upiIntent,
-    isDemo: config.enableDemoPayment
+    upiIntent
   });
 });
 
@@ -66,8 +65,13 @@ router.post('/verify', (req: Request, res: Response) => {
   // Mark as Paid (JobService also guards internally)
   const updatedJob = JobService.markPaid(job.jobCode, paymentId);
 
-  // If autoSimulate: simulate printing with tracked timers
-  if (autoSimulate !== false) {
+  // Persist payment record to database
+  if (updatedJob) {
+    savePayment(updatedJob.jobCode, updatedJob.pricing.totalPrice, updatedJob.paymentMethod, updatedJob.paymentId || `PAY-${Date.now()}`);
+  }
+
+  // Only simulate printing when explicitly requested (kiosk/hardware agent)
+  if (autoSimulate === true) {
     simulatePrintingFlow(job.jobCode);
   }
 
@@ -107,7 +111,7 @@ function simulatePrintingFlow(jobCode: string) {
       if (current >= totalSheets) {
         clearInterval(interval);
         const t3 = setTimeout(() => {
-          JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages 🎉', totalSheets);
+          JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages', totalSheets);
         }, 800);
         JobService.trackSimulationTimer(jobCode, t3);
       }

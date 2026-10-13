@@ -16,5 +16,3 @@ services:
         value: M-01
       - key: DEFAULT_MACHINE_LOCATION
         value: Library Block
-      - key: ENABLE_DEMO_PAYMENT
-        value: "true"

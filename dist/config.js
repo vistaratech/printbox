@@ -14,7 +14,6 @@ exports.config = {
     maxFileSizeMb: parseInt(process.env.MAX_FILE_SIZE_MB || '50', 10),
     defaultMachineId: process.env.DEFAULT_MACHINE_ID || 'M-01',
     defaultMachineLocation: process.env.DEFAULT_MACHINE_LOCATION || 'Library Block',
-    enableDemoPayment: process.env.ENABLE_DEMO_PAYMENT !== 'false',
     pricing: {
         baseRateBw: 1.0, // Rs 1 per page
         baseRateColor: 5.0, // Rs 5 per page

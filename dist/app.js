@@ -14,6 +14,7 @@ const jobRoutes_1 = __importDefault(require("./routes/jobRoutes"));
 const paymentRoutes_1 = __importDefault(require("./routes/paymentRoutes"));
 const machineRoutes_1 = __importDefault(require("./routes/machineRoutes"));
 const kioskRoutes_1 = __importDefault(require("./routes/kioskRoutes"));
+const adminRoutes_1 = __importDefault(require("./routes/adminRoutes"));
 const config_1 = require("./config");
 const app = (0, express_1.default)();
 // ── Security Headers ──
@@ -63,6 +64,12 @@ app.get('/', (_req, res) => {
 app.get('/sticker', (_req, res) => {
     res.sendFile(path_1.default.resolve(process.cwd(), 'sticker.html'));
 });
+app.get('/admin', (_req, res) => {
+    res.sendFile(path_1.default.resolve(process.cwd(), 'admin.html'));
+});
+app.get('/kiosk', (_req, res) => {
+    res.sendFile(path_1.default.resolve(process.cwd(), 'kiosk.html'));
+});
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
     res.json({
@@ -79,6 +86,7 @@ app.use('/api/jobs', jobRoutes_1.default);
 app.use('/api/payments', paymentRoutes_1.default);
 app.use('/api/machines', machineRoutes_1.default);
 app.use('/api/kiosk', kioskRoutes_1.default);
+app.use('/api/admin', adminRoutes_1.default);
 // Global error handling middleware
 app.use((err, _req, res, _next) => {
     // Handle multer file size errors

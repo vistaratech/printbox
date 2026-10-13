@@ -9,6 +9,7 @@ import jobRoutes from './routes/jobRoutes';
 import paymentRoutes from './routes/paymentRoutes';
 import machineRoutes from './routes/machineRoutes';
 import kioskRoutes from './routes/kioskRoutes';
+import adminRoutes from './routes/adminRoutes';
 import { config } from './config';
 
 const app = express();
@@ -70,6 +71,14 @@ app.get('/sticker', (_req: Request, res: Response) => {
   res.sendFile(path.resolve(process.cwd(), 'sticker.html'));
 });
 
+app.get('/admin', (_req: Request, res: Response) => {
+  res.sendFile(path.resolve(process.cwd(), 'admin.html'));
+});
+
+app.get('/kiosk', (_req: Request, res: Response) => {
+  res.sendFile(path.resolve(process.cwd(), 'kiosk.html'));
+});
+
 // Health check endpoint
 app.get('/api/health', (_req: Request, res: Response) => {
   res.json({
@@ -87,6 +96,7 @@ app.use('/api/jobs', jobRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/machines', machineRoutes);
 app.use('/api/kiosk', kioskRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Global error handling middleware
 app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {

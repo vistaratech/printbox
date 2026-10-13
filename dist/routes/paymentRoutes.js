@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
 const jobService_1 = require("../services/jobService");
-const config_1 = require("../config");
+const databaseService_1 = require("../services/databaseService");
 const router = (0, express_1.Router)();
 /**
  * POST /api/payments/create-order
@@ -29,8 +29,7 @@ router.post('/create-order', (req, res) => {
         success: true,
         jobCode: job.jobCode,
         amount: job.pricing.totalPrice,
-        upiIntent,
-        isDemo: config_1.config.enableDemoPayment
+        upiIntent
     });
 });
 /**
@@ -57,8 +56,12 @@ router.post('/verify', (req, res) => {
     }
     // Mark as Paid (JobService also guards internally)
     const updatedJob = jobService_1.JobService.markPaid(job.jobCode, paymentId);
-    // If autoSimulate: simulate printing with tracked timers
-    if (autoSimulate !== false) {
+    // Persist payment record to database
+    if (updatedJob) {
+        (0, databaseService_1.savePayment)(updatedJob.jobCode, updatedJob.pricing.totalPrice, updatedJob.paymentMethod, updatedJob.paymentId || `PAY-${Date.now()}`);
+    }
+    // Only simulate printing when explicitly requested (kiosk/hardware agent)
+    if (autoSimulate === true) {
         simulatePrintingFlow(job.jobCode);
     }
     return res.json({
@@ -94,7 +97,7 @@ function simulatePrintingFlow(jobCode) {
             if (current >= totalSheets) {
                 clearInterval(interval);
                 const t3 = setTimeout(() => {
-                    jobService_1.JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages 🎉', totalSheets);
+                    jobService_1.JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages', totalSheets);
                 }, 800);
                 jobService_1.JobService.trackSimulationTimer(jobCode, t3);
             }
