@@ -310,7 +310,9 @@ section{animation:slide-up-spring .55s cubic-bezier(.2,.8,.2,1) both}
  <div class="steps" id="steps"><span></span><span></span><span></span><span></span></div><div class="sn" id="sn"></div>
 
  <section id="s1">
-   <div class="hero" id="hero"></div><h2>Print it. Grab it. Go.</h2><p class="sub">No queue, no login. Upload from your phone and collect it at the machine.</p>
+   <div class="hero" id="hero">
+     <svg class="prn on" viewBox="0 0 200 140" aria-hidden="true"><defs><clipPath id="cph"><rect x="0" y="82" width="200" height="58"/></clipPath><linearGradient id="pgh"><stop offset="0" stop-color="#0098c9"/><stop offset=".5" stop-color="#e6007e"/><stop offset="1" stop-color="#ffd400"/></linearGradient></defs><g clip-path="url(#cph)"><g class="paper"><rect class="pa" x="58" y="12" width="84" height="72" rx="3"/><rect class="ln" x="68" y="24" width="64" height="5" rx="2"/><rect class="ln" x="68" y="35" width="44" height="5" rx="2"/><rect class="ln" x="68" y="46" width="58" height="5" rx="2"/><rect x="68" y="58" width="64" height="16" rx="3" fill="url(#pgh)"/></g></g><rect class="bd" x="18" y="36" width="164" height="48" rx="14"/><rect class="sl" x="50" y="72" width="100" height="6" rx="3"/><circle class="led" cx="162" cy="52" r="4"/></svg><b class="stk a">Skip the queue</b><b class="stk b">From ₹1/page</b>
+   </div><h2>Print it. Grab it. Go.</h2><p class="sub">No queue, no login. Upload from your phone and collect it at the machine.</p>
    <div class="guide-card"><div class="mascot" aria-hidden="true"><span class="bubble a">Hi</span><span class="bubble b"><i class="ico sm attach"></i></span><i class="head"><i class="face"><i class="eye"></i><i class="eye"></i></i><i class="smile"></i></i><i class="arm l"></i><i class="arm r"></i><i class="body"></i><i class="leg l"></i><i class="leg r"></i></div><div class="guide-copy"><b>PrintBox buddy ready!</b><small>File upload pannunga — naan price, pages, pickup status ellam guide panren.</small></div><div class="paper-trail" aria-hidden="true"><i></i><i></i><i></i></div></div>
    <div class="trust" aria-label="PrintBox benefits"><span><i class="ico sm fast"></i> Fast<small>~30 sec setup</small></span><span><i class="ico sm lock"></i> Private<small>Auto cleanup</small></span><span><i class="ico sm smart"></i> Smart<small>Paper saver</small></span></div>
   <label class="drop" id="dz"><input type="file" id="fi" accept=".pdf,.doc,.docx,.ppt,.pptx,.jpg,.jpeg,.png,.webp,.txt">
@@ -590,16 +592,16 @@ addEventListener('resize',()=>$$('.seg').forEach(pl));document.fonts&&document.f
 const H=['Payment received','Sending to the machine…','Printing your pages…','Pages are out!','Done! Grab your pages'];
 let ci;
 function ctr(k){
-  clearInterval(ci);const e=$('#pcnt');$('#s4h').textContent=H[k]||'';
-  if(k<2){e.textContent='';return}
+  clearInterval(ci);const e=$('#pcnt');if($('#s4h'))$('#s4h').textContent=H[k]||'';
+  if(!e||k<2){if(e)e.textContent='';return}
   const y=Math.ceil(calc().n/S.pps)*S.copies;
   if(k>2){
-    e.textContent=y+' of '+y+' pages';
+    if(e)e.textContent=y+' of '+y+' pages';
     if(k===4){boom();Snd.fanfare();toast('All done! Grab your pages from the tray','<span class="ico sm print"></span>')}
     return;
   }
-  let x=0;e.textContent='0 of '+y+' pages';
-  ci=setInterval(()=>{x=Math.min(y,x+1);e.textContent=x+' of '+y+' pages';if(x>=y)clearInterval(ci)},Math.max(60,3000/y));
+  let x=0;if(e)e.textContent='0 of '+y+' pages';
+  ci=setInterval(()=>{x=Math.min(y,x+1);if(e)e.textContent=x+' of '+y+' pages';if(x>=y)clearInterval(ci)},Math.max(60,3000/y));
 }
 
 // ── Multi-wave Confetti Explosion ──
@@ -636,8 +638,6 @@ $('#pre').onclick=e=>{
   Snd.preset();toast('Applied '+PRE_LABELS[pKey]+' preset','<span class="ico sm fast"></span>');
   $$('#pre button').forEach(x=>x.classList.toggle('on',x===b));
 };
-
-$('#hero').innerHTML=$('#prn').outerHTML.replace(' id="prn"','').replace('id="cp"','id="cph"').replace('url(#cp)','url(#cph)').replace('id="pg1"','id="pgh"').replace('url(#pg1)','url(#pgh)').replace('class="prn"','class="prn on"')+'<b class="stk a">Skip the queue</b><b class="stk b">From ₹1/page</b>';
 
 function upd(){
  const c=calc();tween(c.total);$$('.seg').forEach(pl);
