@@ -114,4 +114,14 @@ router.post('/:machineId/heartbeat', (req: Request, res: Response) => {
   return res.json({ success: true, machine });
 });
 
+/**
+ * POST /api/kiosk/:machineId/test-print
+ * Trigger hardware test print without browser dialog
+ */
+router.post('/:machineId/test-print', (req: Request, res: Response) => {
+  const machineId = String(req.params.machineId);
+  const job = JobService.createTestPrintJob(machineId);
+  return res.json({ success: true, job });
+});
+
 export default router;

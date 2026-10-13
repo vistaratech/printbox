@@ -549,6 +549,27 @@ body::after {
   gap: 6px;
 }
 
+.status-badge-printing {
+  color: var(--cyan);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 6px 12px;
+  background: rgba(0, 242, 254, 0.12);
+  border: 1px solid rgba(0, 242, 254, 0.35);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-badge-printing .status-beacon {
+  background: var(--cyan);
+}
+
+.job-item.printing {
+  border-color: rgba(0, 242, 254, 0.4);
+  background: rgba(0, 242, 254, 0.05);
+}
+
 .empty-feed {
   color: var(--text-muted);
   text-align: center;
@@ -759,12 +780,10 @@ body::after {
         <span class="queue-count-badge" id="jobCountBadge">0 jobs</span>
       </div>
       <div class="action-tools">
-        <button class="mode-toggle" id="autoPrintBtn" onclick="toggleAutoPrint()">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
-          </svg>
-          Auto-Print: <b id="autoPrintState">ON</b>
-        </button>
+        <div class="mode-toggle" id="autoPrintBtn" title="Automatic silent printing via Hardware Agent">
+          <span class="status-beacon"></span>
+          Silent Print: <b id="autoPrintState">ACTIVE</b>
+        </div>
         <button class="test-btn" onclick="testEpsonPrint()">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M10 2v7.527a2 2 0 0 1-.211.896L4.72 20.55a1 1 0 0 0 .9 1.45h12.76a1 1 0 0 0 .9-1.45l-5.069-10.127A2 2 0 0 1 14 9.527V2"/>
@@ -1045,38 +1064,25 @@ async function finishJob(jobCode) {
 /**
  * Test Print: Instant Epson L3250 Slip via native print engine
  */
-function testEpsonPrint() {
+async function testEpsonPrint() {
   const statusTxt = document.getElementById('machineStatusText');
-  if (statusTxt) statusTxt.textContent = 'Generating test print…';
+  if (statusTxt) statusTxt.textContent = 'Sending test print to Epson…';
 
-  const printArea = document.getElementById('printArea');
-  printArea.innerHTML = `
-    <div class="print-page" style="padding:40px 20px;text-align:center;color:#000000;font-family:'Outfit',system-ui,sans-serif;max-width:550px;margin:0 auto;">
-      <div style="border:3px solid #000;border-radius:18px;padding:32px 24px;background:#fff;">
-        <h1 style="font-size:28px;font-weight:900;margin-bottom:6px;color:#000;">🖨️ PrintBox Terminal</h1>
-        <p style="font-size:14px;font-weight:600;color:#333;margin-bottom:4px;">Lenovo Pad ➔ Epson L3250 Direct Test</p>
-        <p style="font-size:12px;color:#666;">Time: ${new Date().toLocaleString()}</p>
-        <hr style="border:0;border-top:2px dashed #000;margin:20px 0;">
-        <p style="font-size:22px;font-weight:800;color:#10b981;margin-bottom:8px;">✅ PRINTER CONNECTED & READY!</p>
-        <p style="font-size:14px;color:#444;line-height:1.5;">Your Lenovo Pad can print directly to Epson L3250 without a PC.</p>
-        <hr style="border:0;border-top:1px solid #ddd;margin:20px 0;">
-        <p style="font-size:11px;color:#888;">PrintBox Self-Service Kiosk · Cloud Connected</p>
-      </div>
-    </div>
-  `;
+  try {
+    const res = await fetch(API + '/kiosk/M-01/test-print', { method: 'POST' });
+    if (res.ok) {
+      if (statusTxt) statusTxt.textContent = '✅ Test print sent to Epson printer!';
+      setTimeout(() => {
+        if (statusTxt) statusTxt.textContent = 'M-01 · Ready';
+      }, 5000);
+      refreshQueue();
+      return;
+    }
+  } catch (err) {
+    console.warn('Backend test print error:', err);
+  }
 
-  // Safe cleanup handler (waits until print dialog finishes, NOT 3 seconds!)
-  const cleanup = () => {
-    window.removeEventListener('afterprint', cleanup);
-    if (statusTxt) statusTxt.textContent = 'M-01 · Ready';
-    setTimeout(() => {
-      if (printArea) printArea.innerHTML = '';
-    }, 6000);
-  };
-  window.addEventListener('afterprint', cleanup, { once: true });
-  setTimeout(cleanup, 30000);
-
-  // Check if Fully Kiosk Silent Print is available
+  // Fallback ONLY if inside Fully Kiosk Browser (silent)
   if (window.fully && typeof window.fully.print === 'function') {
     try {
       window.fully.print();
@@ -1084,16 +1090,7 @@ function testEpsonPrint() {
     } catch (_) {}
   }
 
-  // Native window.print() trigger
-  setTimeout(() => {
-    try {
-      window.focus();
-      window.print();
-    } catch (e) {
-      console.error('Print trigger error:', e);
-      alert('Print error: ' + (e.message || e));
-    }
-  }, 350);
+  if (statusTxt) statusTxt.textContent = 'M-01 · Ready';
 }
 
 /**
@@ -1181,14 +1178,10 @@ function renderJobItems(jobs) {
     const rawFile = (j.file && j.file.fileName) || j.fileName;
     const isDone = j.status === 'completed' || printedJobs.has(j.jobCode);
 
-    // Auto-Print Trigger (only for paid/queued jobs — NOT pending_payment)
-    const isPrintReady = j.status === 'payment_received' || j.status === 'queued' || j.status === 'sending_to_machine';
-    if (!isDone && isPrintReady && autoPrintActive && !printedJobs.has(j.jobCode) && !inFlightJobSet.has(j.jobCode)) {
-      setTimeout(() => sendToPrinter(j), 600);
-    }
+    const isPrinting = j.status === 'printing' || j.status === 'sending_to_machine';
 
     return `
-      <div class="job-item ${isDone ? 'done' : 'active'}">
+      <div class="job-item ${isDone ? 'done' : isPrinting ? 'printing' : 'active'}">
         <div class="job-code-tag">${j.jobCode}</div>
         <div class="job-body">
           <b>${copies} ${copies > 1 ? 'copies' : 'copy'} · ₹${price.toFixed(2)}</b>
@@ -1202,14 +1195,19 @@ function renderJobItems(jobs) {
                 </svg>
                 Ready
                </span>` 
-            : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}')" ${j.status === 'pending_payment' ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                  <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
-                  <rect x="6" y="14" width="12" height="8" rx="1"/>
-                </svg>
-                Print Now
-               </button>`
+            : isPrinting
+            ? `<span class="status-badge-printing">
+                <span class="status-beacon"></span>
+                Printing…
+               </span>`
+            : j.status === 'pending_payment'
+            ? `<span class="status-badge-pending" style="opacity:0.6">
+                Unpaid
+               </span>`
+            : `<span class="status-badge-pending">
+                <span class="status-beacon" style="background:var(--amber)"></span>
+                In Queue
+               </span>`
           }
         </div>
       </div>

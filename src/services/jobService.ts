@@ -5,6 +5,7 @@ import { SseService } from './sseService';
 import { config } from '../config';
 import { saveJob, loadJob, loadAllJobs, updateJobStatus as dbUpdateStatus, getJobCount } from './databaseService';
 import fs from 'fs';
+import path from 'path';
 
 const MAX_JOBS = 5000;
 const JOB_TTL_MS = 60 * 60 * 1000;
@@ -134,5 +135,39 @@ export class JobService {
   public static trackSimulationTimer(jobCode: string, timer: NodeJS.Timeout): void {
     if (!this.activeSimulations.has(jobCode)) this.activeSimulations.set(jobCode, []);
     this.activeSimulations.get(jobCode)!.push(timer);
+  }
+
+  public static createTestPrintJob(machineId: string = config.defaultMachineId): PrintJob {
+    const sampleFileName = 'test_slip.pdf';
+    const sampleFilePath = path.join(config.uploadDir, sampleFileName);
+
+    const file: UploadedFileInfo = {
+      id: 'test-print',
+      originalName: 'PrintBox_Test_Slip.pdf',
+      fileName: sampleFileName,
+      filePath: sampleFilePath,
+      fileSize: 72064,
+      mimeType: 'application/pdf',
+      detectedPages: 1,
+      createdAt: new Date().toISOString()
+    };
+
+    const options: PrintOptions = {
+      color: 'bw',
+      sides: 'single',
+      size: 'A4',
+      orient: 'portrait',
+      pps: 1,
+      quality: 'normal',
+      copies: 1,
+      range: 'custom',
+      rangeText: '1',
+      staple: false,
+      collate: true
+    };
+
+    const job = this.createJob(file, options, machineId, 'test');
+    this.updateStatus(job.jobCode, 'payment_received', 'Test print queued for Epson L3250');
+    return job;
   }
 }

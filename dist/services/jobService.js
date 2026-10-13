@@ -9,6 +9,7 @@ const sseService_1 = require("./sseService");
 const config_1 = require("../config");
 const databaseService_1 = require("./databaseService");
 const fs_1 = __importDefault(require("fs"));
+const path_1 = __importDefault(require("path"));
 const MAX_JOBS = 5000;
 const JOB_TTL_MS = 60 * 60 * 1000;
 const CLEANUP_INTERVAL_MS = 5 * 60 * 1000;
@@ -143,6 +144,36 @@ class JobService {
         if (!this.activeSimulations.has(jobCode))
             this.activeSimulations.set(jobCode, []);
         this.activeSimulations.get(jobCode).push(timer);
+    }
+    static createTestPrintJob(machineId = config_1.config.defaultMachineId) {
+        const sampleFileName = 'test_slip.pdf';
+        const sampleFilePath = path_1.default.join(config_1.config.uploadDir, sampleFileName);
+        const file = {
+            id: 'test-print',
+            originalName: 'PrintBox_Test_Slip.pdf',
+            fileName: sampleFileName,
+            filePath: sampleFilePath,
+            fileSize: 72064,
+            mimeType: 'application/pdf',
+            detectedPages: 1,
+            createdAt: new Date().toISOString()
+        };
+        const options = {
+            color: 'bw',
+            sides: 'single',
+            size: 'A4',
+            orient: 'portrait',
+            pps: 1,
+            quality: 'normal',
+            copies: 1,
+            range: 'custom',
+            rangeText: '1',
+            staple: false,
+            collate: true
+        };
+        const job = this.createJob(file, options, machineId, 'test');
+        this.updateStatus(job.jobCode, 'payment_received', 'Test print queued for Epson L3250');
+        return job;
     }
 }
 exports.JobService = JobService;

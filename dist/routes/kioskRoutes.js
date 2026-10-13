@@ -77,4 +77,13 @@ router.post('/:machineId/heartbeat', (req, res) => {
     const machine = machineService_1.MachineService.updateHeartbeat(machineId, paperRemaining !== undefined ? Number(paperRemaining) : undefined, tonerLevelPercent !== undefined ? Number(tonerLevelPercent) : undefined);
     return res.json({ success: true, machine });
 });
+/**
+ * POST /api/kiosk/:machineId/test-print
+ * Trigger hardware test print without browser dialog
+ */
+router.post('/:machineId/test-print', (req, res) => {
+    const machineId = String(req.params.machineId);
+    const job = jobService_1.JobService.createTestPrintJob(machineId);
+    return res.json({ success: true, job });
+});
 exports.default = router;
