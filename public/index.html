@@ -559,15 +559,15 @@ const clr=()=>{S.pl=null;$('#pgn').textContent='Edit if this looks wrong'};
 $('#pgs').addEventListener('input',clr);$$('[data-pg]').forEach(b=>b.addEventListener('click',clr));
 addEventListener('resize',()=>$$('.seg').forEach(pl));document.fonts&&document.fonts.ready.then(()=>$$('.seg').forEach(pl));
 
-const H=['Payment received','Sending to the machine…','Printing your pages…','Pages are out!','Done! Grab your pages'];
+const H=['Sending to the machine…','Printing your pages…','Pages are out! Grab them!'];
 let ci;
 function ctr(k){
   clearInterval(ci);const e=$('#pcnt');$('#s4h').textContent=H[k]||'';
-  if(k<2){e.textContent='';return}
+  if(k<1){e.textContent='';return}
   const y=Math.ceil(calc().n/S.pps)*S.copies;
-  if(k>2){
+  if(k>=2){
     e.textContent=y+' of '+y+' pages';
-    if(k===4){boom();Snd.fanfare();toast('All done! Grab your pages from the tray','<span class="ico sm print"></span>')}
+    boom();Snd.fanfare();toast('All done! Grab your pages from the tray','<span class="ico sm print"></span>');
     return;
   }
   let x=0;e.textContent='0 of '+y+' pages';
@@ -718,7 +718,7 @@ const copyJob=()=>{
 $('#jc').onclick=copyJob;
 if($('#cpbtn'))$('#cpbtn').onclick=copyJob;
 
-const ST=['Payment received','File sent to the machine','Printing your pages','Ready in the tray'];
+const ST=['File sent to the machine','Printing your pages','Ready in the tray'];
 let jobPollTimer = null;
 async function run(){
  go(4);$('#done').classList.add('hide');$('#again').classList.add('hide');Snd.pay();
@@ -731,8 +731,8 @@ async function run(){
       : (isCurrent ? '<i class="st-spinner"></i>' : (i + 1));
     return '<div class="st '+(isDone?'ok':isCurrent?'go':'')+'"><span class="d">'+badge+'</span><b>'+t+'</b></div>';
   }).join('');
-  $('#pb').style.width=Math.min(100, Math.max(15, (k===4?100:(k+1)/ST.length*100)))+'%';
-  $('#prn').setAttribute('class','prn'+(k===2?' on':k>2?' out':''));
+  $('#pb').style.width=Math.min(100, Math.max(25, (k===2?100:(k+1)/ST.length*100)))+'%';
+  $('#prn').setAttribute('class','prn'+(k===1?' on':k>=2?' out':''));
   ctr(k);
  };
  if(currentEventSource){currentEventSource.close();currentEventSource=null}
@@ -759,9 +759,9 @@ async function run(){
   
   if(r.ok){
    const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
-   draw(0); // Immediately reflect payment confirmed state
+   draw(0); // Immediately reflect file sending state
 
-   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:false})});
+   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:true})});
 
    const handleJobState = (j) => {
     if(!j) return;
@@ -776,8 +776,8 @@ async function run(){
       $('#again').classList.remove('hide');
       return;
     }
-    const sm={'pending_payment':0,'payment_received':0,'sending_to_machine':1,'printing':2,'completed':4};
-    const sidx=sm[j.status]!==undefined?sm[j.status]:1;
+    const sm={'pending_payment':0,'payment_received':0,'sending_to_machine':0,'printing':1,'completed':2};
+    const sidx=sm[j.status]!==undefined?sm[j.status]:0;
     draw(sidx);
     if(j.status==='printing'){$('#pcnt').textContent=(j.printedPages||0)+' of '+(j.totalPhysicalPages||calc().paper)+' pages'}
     if(j.status==='completed'){

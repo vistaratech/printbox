@@ -70,10 +70,8 @@ router.post('/verify', (req: Request, res: Response) => {
     savePayment(updatedJob.jobCode, updatedJob.pricing.totalPrice, updatedJob.paymentMethod, updatedJob.paymentId || `PAY-${Date.now()}`);
   }
 
-  // Only simulate printing when explicitly requested (kiosk/hardware agent)
-  if (autoSimulate === true) {
-    simulatePrintingFlow(job.jobCode);
-  }
+  // Auto-progress printing flow (ensures mobile progresses immediately without getting stuck)
+  simulatePrintingFlow(job.jobCode);
 
   return res.json({
     success: true,
