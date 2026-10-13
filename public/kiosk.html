@@ -601,6 +601,53 @@ body::after {
   .kiosk-panel { padding: 24px; border-radius: 24px; }
   #qrcode { width: 180px; height: 180px; }
 }
+
+/* ── Native Android Printing Engine (Epson L3250 Compatible) ── */
+@media screen {
+  #printArea {
+    display: none !important;
+  }
+}
+@media print {
+  body {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  body > *:not(#printArea) {
+    display: none !important;
+  }
+  #printArea {
+    display: block !important;
+    position: static !important;
+    width: 100% !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+  .print-page {
+    page-break-after: always !important;
+    break-after: page !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    background: #ffffff !important;
+  }
+  .print-page canvas, .print-page img {
+    max-width: 100% !important;
+    height: auto !important;
+    display: block !important;
+    margin: 0 auto !important;
+  }
+  @page {
+    size: auto;
+    margin: 0mm;
+  }
+}
 </style>
 </head>
 <body>
@@ -738,8 +785,8 @@ body::after {
   </aside>
 </div>
 
-<!-- Invisible iframe for device print driver trigger -->
-<iframe id="printWorkerFrame" style="position:fixed;right:100%;bottom:100%;width:0;height:0;border:0;opacity:0;"></iframe>
+<!-- Native Print Container (Renders clean printable pages for Epson L3250) -->
+<div id="printArea"></div>
 
 <script>
 const API = location.origin + '/api';
@@ -769,7 +816,7 @@ function toggleAutoPrint() {
 }
 
 /**
- * Trigger print via hidden iframe to Android Spooler / Epson Print Enabler
+ * Trigger real print on Lenovo Pad to Epson L3250 via native window.print()
  */
 async function sendToPrinter(jobCode, fileName) {
   if (!fileName || inFlightJobSet.has(jobCode)) return;
@@ -778,7 +825,7 @@ async function sendToPrinter(jobCode, fileName) {
   const fileUrl = location.origin + '/uploads/' + encodeURIComponent(fileName);
   
   const statusTxt = document.getElementById('machineStatusText');
-  if (statusTxt) statusTxt.textContent = `Printing ${jobCode}…`;
+  if (statusTxt) statusTxt.textContent = `Preparing ${jobCode} for Epson…`;
 
   // 1. Notify Backend that printing started (syncs with student's mobile live screen)
   try {
@@ -789,112 +836,90 @@ async function sendToPrinter(jobCode, fileName) {
     });
   } catch (_) {}
 
-  // 2. Fully Kiosk Browser Native Print Hook (Lenovo Pad)
+  // 2. Fully Kiosk Browser Native Silent Print Hook (if running inside Fully Kiosk)
   if (window.fully && typeof window.fully.print === 'function') {
     try {
       window.fully.print(fileUrl);
-      setTimeout(() => finishJob(jobCode), 3500);
+      setTimeout(() => finishJob(jobCode), 4000);
       return;
     } catch (_) {}
   }
 
-  // 3. Document type check
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = '';
+
   const ext = fileName.split('.').pop().toLowerCase();
   const isPdf = ext === 'pdf';
   const isImage = /^(jpe?g|png|webp|gif)$/.test(ext);
 
-  const frame = document.getElementById('printWorkerFrame');
-
-  // 4. PDF.js canvas rendering (Native Android & Mobile Friendly)
+  // 3. Render PDF document into native print area
   if (isPdf && typeof pdfjsLib !== 'undefined') {
     try {
       pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
       const loadingTask = pdfjsLib.getDocument(fileUrl);
       const pdf = await loadingTask.promise;
-      
-      const doc = frame.contentWindow.document;
-      doc.open();
-      doc.write(`
-        <!DOCTYPE html>
-        <html>
-        <head>
-          <style>
-            @page { size: auto; margin: 0mm; }
-            body { margin: 0; padding: 0; background: #fff; }
-            .page-wrap { display: block; page-break-after: always; width: 100%; text-align: center; }
-            canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
-          </style>
-        </head>
-        <body><div id="pages"></div></body>
-        </html>
-      `);
-      doc.close();
 
-      const pagesContainer = doc.getElementById('pages');
       for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
         const page = await pdf.getPage(pageNum);
-        const viewport = page.getViewport({ scale: 1.5 });
-        const canvas = doc.createElement('canvas');
+        const viewport = page.getViewport({ scale: 1.6 });
+        const canvas = document.createElement('canvas');
         canvas.width = viewport.width;
         canvas.height = viewport.height;
         await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
-        
-        const wrap = doc.createElement('div');
-        wrap.className = 'page-wrap';
-        wrap.appendChild(canvas);
-        pagesContainer.appendChild(wrap);
+
+        const pageWrap = document.createElement('div');
+        pageWrap.className = 'print-page';
+        pageWrap.appendChild(canvas);
+        printArea.appendChild(pageWrap);
       }
 
-      setTimeout(() => {
-        try {
-          frame.contentWindow.focus();
-          frame.contentWindow.print();
-        } catch (_) {
-          window.open(fileUrl, '_blank');
-        }
-        setTimeout(() => finishJob(jobCode), 3500);
-      }, 500);
+      triggerBrowserPrint(jobCode);
       return;
     } catch (err) {
       console.warn('PDF.js render fallback:', err);
     }
   }
 
-  // 5. Image printing
+  // 4. Render Image into native print area
   if (isImage) {
-    const doc = frame.contentWindow.document;
-    doc.open();
-    doc.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <style>
-          @page { size: auto; margin: 0mm; }
-          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; }
-          img { max-width: 100%; max-height: 100vh; object-fit: contain; }
-        </style>
-      </head>
-      <body>
-        <img src="${fileUrl}" onload="setTimeout(()=>{ try{ window.focus(); window.print(); }catch(_){} }, 300)" />
-      </body>
-      </html>
-    `);
-    doc.close();
-    setTimeout(() => finishJob(jobCode), 4000);
+    const pageWrap = document.createElement('div');
+    pageWrap.className = 'print-page';
+    const img = document.createElement('img');
+    img.src = fileUrl;
+    img.onload = () => triggerBrowserPrint(jobCode);
+    pageWrap.appendChild(img);
+    printArea.appendChild(pageWrap);
     return;
   }
 
-  // 6. Direct frame fallback
-  frame.onload = function() {
+  // 5. Direct Fallback
+  const pageWrap = document.createElement('div');
+  pageWrap.className = 'print-page';
+  pageWrap.innerHTML = `<img src="${fileUrl}" style="max-width:100%;height:auto;">`;
+  printArea.appendChild(pageWrap);
+  setTimeout(() => triggerBrowserPrint(jobCode), 400);
+}
+
+function triggerBrowserPrint(jobCode) {
+  const statusTxt = document.getElementById('machineStatusText');
+  if (statusTxt) statusTxt.textContent = `Printing ${jobCode} on Epson L3250…`;
+
+  // Focus and trigger native Android Print Spooler (Epson Print Enabler)
+  setTimeout(() => {
     try {
-      frame.contentWindow.focus();
-      frame.contentWindow.print();
+      window.focus();
+      window.print();
     } catch (e) {
-      window.open(fileUrl, '_blank');
+      console.error('Print trigger error:', e);
     }
-    setTimeout(() => finishJob(jobCode), 3000);
-  };
-  frame.src = fileUrl;
+
+    // Complete job and clear print buffer
+    setTimeout(() => {
+      finishJob(jobCode);
+      const printArea = document.getElementById('printArea');
+      if (printArea) printArea.innerHTML = '';
+    }, 4500);
+  }, 250);
 }
 
 async function finishJob(jobCode) {
@@ -907,30 +932,27 @@ async function finishJob(jobCode) {
 }
 
 /**
- * Test Print: Verification Slip
+ * Test Print: Instant Epson L3250 Slip via native window.print()
  */
 function testEpsonPrint() {
-  const testSlip = `
-    <html>
-    <head><title>PrintBox Test</title></head>
-    <body style="font-family:'Outfit',sans-serif;text-align:center;padding:50px;">
-      <h2 style="color:#000;font-size:24px;margin-bottom:8px;">PrintBox Kiosk Terminal</h2>
-      <p style="font-size:14px;color:#555;">Hardware Connection Test: Lenovo Pad ➔ Epson L3250</p>
-      <p style="font-size:12px;color:#777;margin-top:6px;">Time: ${new Date().toLocaleString()}</p>
-      <hr style="border:0;border-top:2px dashed #000;margin:24px 0;">
-      <p style="font-size:18px;font-weight:bold;color:#10b981;">STATUS: CONNECTED & WORKING PERFECTLY!</p>
-    </body>
-    </html>
+  const printArea = document.getElementById('printArea');
+  printArea.innerHTML = `
+    <div class="print-page" style="padding:60px 40px;text-align:center;color:#000;font-family:sans-serif;">
+      <h1 style="font-size:30px;margin-bottom:12px;color:#000;">PrintBox Terminal Test</h1>
+      <p style="font-size:16px;color:#444;margin-bottom:6px;">Lenovo Pad ➔ Epson L3250 Wi-Fi Test</p>
+      <p style="font-size:13px;color:#777;">Time: ${new Date().toLocaleString()}</p>
+      <hr style="border:0;border-top:2px dashed #000;margin:30px 0;">
+      <p style="font-size:24px;font-weight:bold;color:#10b981;margin-bottom:8px;">CONNECTION SUCCESSFUL!</p>
+      <p style="font-size:14px;color:#555;">Epson printer is online, paired, and ready to print.</p>
+    </div>
   `;
-  const frame = document.getElementById('printWorkerFrame');
-  const doc = frame.contentWindow.document;
-  doc.open();
-  doc.write(testSlip);
-  doc.close();
   setTimeout(() => {
-    frame.contentWindow.focus();
-    frame.contentWindow.print();
-  }, 350);
+    window.focus();
+    window.print();
+    setTimeout(() => {
+      if (printArea) printArea.innerHTML = '';
+    }, 3000);
+  }, 200);
 }
 
 /**
@@ -1081,7 +1103,7 @@ setInterval(sendKioskHeartbeat, 30000);
 
 document.getElementById('hostUrlDisplay').textContent = location.host;
 refreshQueue();
-setInterval(refreshQueue, 4000);
+setInterval(refreshQueue, 2500);
 </script>
 
 </body>

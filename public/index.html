@@ -761,7 +761,7 @@ async function run(){
    const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;
    draw(0); // Immediately reflect file sending state
 
-   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:true})});
+   await fetch(API_BASE+'/payments/verify',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({jobCode:currentJob.jobCode,autoSimulate:false})});
 
    const handleJobState = (j) => {
     if(!j) return;

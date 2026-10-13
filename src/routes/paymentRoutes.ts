@@ -70,8 +70,10 @@ router.post('/verify', (req: Request, res: Response) => {
     savePayment(updatedJob.jobCode, updatedJob.pricing.totalPrice, updatedJob.paymentMethod, updatedJob.paymentId || `PAY-${Date.now()}`);
   }
 
-  // Auto-progress printing flow (ensures mobile progresses immediately without getting stuck)
-  simulatePrintingFlow(job.jobCode);
+  // Only simulate if explicitly requested (e.g. headless tests)
+  if (autoSimulate === true) {
+    simulatePrintingFlow(job.jobCode);
+  }
 
   return res.json({
     success: true,
