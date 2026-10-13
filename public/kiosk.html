@@ -456,8 +456,10 @@ body {
 
 <script>
 const API = location.origin + '/api';
-let autoPrintEnabled = localStorage.getItem('pb_autoprint') === 'true';
+// Default to TRUE (Always ON) unless explicitly turned off
+let autoPrintEnabled = localStorage.getItem('pb_autoprint') !== 'false';
 let printedJobs = new Set(JSON.parse(localStorage.getItem('pb_printed_jobs') || '[]'));
+let inFlightJobs = new Set();
 
 function updateAutoPrintUI() {
   const btn = document.getElementById('autoPrintToggle');
@@ -482,9 +484,15 @@ function toggleAutoPrint() {
  * Trigger print on this Android Device (via iframe and Android Print Manager)
  */
 function triggerDevicePrint(jobCode, fileName) {
-  if (!fileName) return;
+  if (!fileName || inFlightJobs.has(jobCode)) return;
+  inFlightJobs.add(jobCode);
+
   const fileUrl = location.origin + '/uploads/' + encodeURIComponent(fileName);
   
+  // Visual feedback on screen
+  const statusTxt = document.getElementById('statusText');
+  if (statusTxt) statusTxt.textContent = `🖨️ Auto-Printing ${jobCode}…`;
+
   // Use a hidden iframe or open direct print view
   const frame = document.getElementById('printFrame');
   frame.onload = function() {
@@ -493,7 +501,6 @@ function triggerDevicePrint(jobCode, fileName) {
       frame.contentWindow.print();
       markJobDone(jobCode);
     } catch (e) {
-      // Fallback: open directly if iframe printing is blocked
       window.open(fileUrl, '_blank');
       markJobDone(jobCode);
     }
