@@ -62,21 +62,25 @@ app.use('/api/payments', paymentLimiter);
 // ── Serve uploaded files (only the uploads dir, NOT the project root) ──
 app.use('/uploads', express.static(config.uploadDir, { maxAge: '1h' }));
 
-// ── Serve index.html and sticker.html ──
+// ── Serve Frontend static files and pages (public/) ──
+const publicDir = path.resolve(process.cwd(), 'public');
+app.use(express.static(publicDir, { maxAge: '1h' }));
+
+// ── Serve Frontend Pages ──
 app.get('/', (_req: Request, res: Response) => {
-  res.sendFile(path.resolve(process.cwd(), 'index.html'));
+  res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.get('/sticker', (_req: Request, res: Response) => {
-  res.sendFile(path.resolve(process.cwd(), 'sticker.html'));
+  res.sendFile(path.join(publicDir, 'sticker.html'));
 });
 
 app.get('/admin', (_req: Request, res: Response) => {
-  res.sendFile(path.resolve(process.cwd(), 'admin.html'));
+  res.sendFile(path.join(publicDir, 'admin.html'));
 });
 
 app.get('/kiosk', (_req: Request, res: Response) => {
-  res.sendFile(path.resolve(process.cwd(), 'kiosk.html'));
+  res.sendFile(path.join(publicDir, 'kiosk.html'));
 });
 
 // Health check endpoint

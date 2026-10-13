@@ -38,7 +38,7 @@ npm start
 ```
 ┌─────────────────────────────────────────┐
 │       Student Smartphone / Web UI       │
-│               (index.html)              │
+│           (public/index.html)           │
 └────────────────────┬────────────────────┘
                      │ HTTP / SSE
                      ▼

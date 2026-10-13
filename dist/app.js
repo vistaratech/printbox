@@ -57,18 +57,21 @@ const paymentLimiter = (0, express_rate_limit_1.default)({
 app.use('/api/payments', paymentLimiter);
 // ── Serve uploaded files (only the uploads dir, NOT the project root) ──
 app.use('/uploads', express_1.default.static(config_1.config.uploadDir, { maxAge: '1h' }));
-// ── Serve index.html and sticker.html ──
+// ── Serve Frontend static files and pages (public/) ──
+const publicDir = path_1.default.resolve(process.cwd(), 'public');
+app.use(express_1.default.static(publicDir, { maxAge: '1h' }));
+// ── Serve Frontend Pages ──
 app.get('/', (_req, res) => {
-    res.sendFile(path_1.default.resolve(process.cwd(), 'index.html'));
+    res.sendFile(path_1.default.join(publicDir, 'index.html'));
 });
 app.get('/sticker', (_req, res) => {
-    res.sendFile(path_1.default.resolve(process.cwd(), 'sticker.html'));
+    res.sendFile(path_1.default.join(publicDir, 'sticker.html'));
 });
 app.get('/admin', (_req, res) => {
-    res.sendFile(path_1.default.resolve(process.cwd(), 'admin.html'));
+    res.sendFile(path_1.default.join(publicDir, 'admin.html'));
 });
 app.get('/kiosk', (_req, res) => {
-    res.sendFile(path_1.default.resolve(process.cwd(), 'kiosk.html'));
+    res.sendFile(path_1.default.join(publicDir, 'kiosk.html'));
 });
 // Health check endpoint
 app.get('/api/health', (_req, res) => {
