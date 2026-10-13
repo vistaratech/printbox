@@ -1,6 +1,10 @@
 node_modules/
-uploads/
-printbox.db
-printbox.db-shm
-printbox.db-wal
+uploads/*
+!uploads/.gitkeep
+.env
+.DS_Store
 *.log
+bin/
+*.db
+*.db-shm
+*.db-wal
