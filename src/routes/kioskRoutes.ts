@@ -53,6 +53,7 @@ router.post('/:machineId/jobs/:jobCode/progress', (req: Request, res: Response) 
  */
 router.post('/:machineId/jobs/:jobCode/complete', (req: Request, res: Response) => {
   const jobCode = String(req.params.jobCode).toUpperCase();
+  const machineId = String(req.params.machineId);
 
   const job = JobService.updateStatus(
     jobCode,
@@ -62,6 +63,14 @@ router.post('/:machineId/jobs/:jobCode/complete', (req: Request, res: Response) 
 
   if (!job) {
     return res.status(404).json({ error: 'Job not found' });
+  }
+
+  // Automatically deduct printed sheets from paper tray
+  const machine = MachineService.getMachine(machineId);
+  if (machine) {
+    const sheetsDeducted = job.totalPhysicalPages || 1;
+    const newPaperRemaining = Math.max(0, machine.paperRemaining - sheetsDeducted);
+    MachineService.updateHeartbeat(machineId, newPaperRemaining);
   }
 
   return res.json({ success: true, job });

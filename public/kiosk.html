@@ -896,15 +896,17 @@ function renderJobItems(jobs) {
     const price = (j.pricing && j.pricing.totalPrice) || 0;
     const displayName = (j.file && (j.file.originalName || j.file.fileName)) || j.fileName || '-';
     const rawFile = (j.file && j.file.fileName) || j.fileName;
-    const isDone = j.status === 'completed' || printedJobs.has(j.jobCode);
+    const isPaid = (j.status === 'payment_received' || j.status === 'queued' || j.status === 'sending_to_machine');
+    const isDone = (j.status === 'completed' || printedJobs.has(j.jobCode));
+    const isPending = (j.status === 'pending_payment');
 
-    // Auto-Print Trigger for newly paid jobs
-    if (!isDone && autoPrintActive && !printedJobs.has(j.jobCode)) {
+    // Auto-Print Trigger: STRICTLY only for PAID jobs that are not completed yet!
+    if (isPaid && !isDone && autoPrintActive && !printedJobs.has(j.jobCode)) {
       setTimeout(() => sendToPrinter(j.jobCode, rawFile), 600);
     }
 
     return `
-      <div class="job-item ${isDone ? 'done' : 'active'}">
+      <div class="job-item ${isDone ? 'done' : isPaid ? 'active' : ''}">
         <div class="job-code-tag">${j.jobCode}</div>
         <div class="job-body">
           <b>${copies} ${copies > 1 ? 'copies' : 'copy'} · ₹${price.toFixed(2)}</b>
@@ -918,14 +920,18 @@ function renderJobItems(jobs) {
                 </svg>
                 Ready
                </span>` 
-            : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                  <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
-                  <rect x="6" y="14" width="12" height="8" rx="1"/>
-                </svg>
-                Print Now
-               </button>`
+            : isPaid
+              ? `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                    <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+                    <rect x="6" y="14" width="12" height="8" rx="1"/>
+                  </svg>
+                  Print Now
+                 </button>`
+              : `<span style="font-size:12px;font-weight:700;color:var(--amber);background:rgba(255,183,3,0.12);border:1px solid rgba(255,183,3,0.3);padding:6px 12px;border-radius:12px;">
+                  Waiting Payment
+                 </span>`
           }
         </div>
       </div>
@@ -936,7 +942,7 @@ function renderJobItems(jobs) {
 function updateMetrics(jobs) {
   const todayStr = new Date().toDateString();
   document.getElementById('countToday').textContent = jobs.filter(j => new Date(j.createdAt).toDateString() === todayStr).length;
-  document.getElementById('countWaiting').textContent = jobs.filter(j => j.status !== 'completed' && !printedJobs.has(j.jobCode)).length;
+  document.getElementById('countWaiting').textContent = jobs.filter(j => (j.status === 'payment_received' || j.status === 'queued') && !printedJobs.has(j.jobCode)).length;
   document.getElementById('countCompleted').textContent = jobs.filter(j => j.status === 'completed' || printedJobs.has(j.jobCode)).length;
 }
 
@@ -947,6 +953,19 @@ function updateClock() {
 }
 updateClock();
 setInterval(updateClock, 1000);
+
+// Keep machine telemetry active
+async function sendKioskHeartbeat() {
+  try {
+    await fetch(API + '/kiosk/M-01/heartbeat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ machineId: 'M-01' })
+    });
+  } catch (_) {}
+}
+sendKioskHeartbeat();
+setInterval(sendKioskHeartbeat, 30000);
 
 document.getElementById('hostUrlDisplay').textContent = location.host;
 refreshQueue();
