@@ -148,6 +148,20 @@ class JobService {
     static createTestPrintJob(machineId = config_1.config.defaultMachineId) {
         const sampleFileName = 'test_slip.pdf';
         const sampleFilePath = path_1.default.join(config_1.config.uploadDir, sampleFileName);
+        if (!fs_1.default.existsSync(sampleFilePath)) {
+            try {
+                const files = fs_1.default.readdirSync(config_1.config.uploadDir);
+                const existingPdf = files.find(f => f.endsWith('.pdf'));
+                if (existingPdf) {
+                    fs_1.default.copyFileSync(path_1.default.join(config_1.config.uploadDir, existingPdf), sampleFilePath);
+                }
+                else {
+                    const minimalPdf = `%PDF-1.4\n1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n3 0 obj<</Type/Page/Parent 2 0 R/MediaBox[0 0 595 842]/Contents 4 0 R/Resources<<>>>>endobj\n4 0 obj<</Length 55>>stream\nBT /F1 18 Tf 50 750 Td (PrintBox Test Slip - Epson L3250 Ready) Tj ET\nendstream\nendobj\nxref\n0 5\n0000000000 65535 f \n0000000009 00000 n \n0000000058 00000 n \n0000000115 00000 n \n0000000216 00000 n \ntrailer<</Size 5/Root 1 0 R>>\nstartxref\n322\n%%EOF`;
+                    fs_1.default.writeFileSync(sampleFilePath, minimalPdf);
+                }
+            }
+            catch (_) { }
+        }
         const file = {
             id: 'test-print',
             originalName: 'PrintBox_Test_Slip.pdf',
