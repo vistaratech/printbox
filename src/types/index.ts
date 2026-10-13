@@ -5,6 +5,12 @@ export type Orientation = 'portrait' | 'landscape';
 export type Quality = 'draft' | 'normal' | 'high';
 export type PagesPerSheet = 1 | 2 | 4 | 6;
 
+export interface PageEditItem {
+  i: number; // original 1-based page index
+  r: number; // rotation in degrees
+  d: number; // 0 = keep, 1 = deleted
+}
+
 export interface PrintOptions {
   color: ColorMode;
   sides: SidesMode;
@@ -17,6 +23,7 @@ export interface PrintOptions {
   rangeText?: string;
   staple: boolean;
   collate: boolean;
+  pageList?: PageEditItem[];
 }
 
 export interface UploadedFileInfo {

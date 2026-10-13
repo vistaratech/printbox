@@ -755,7 +755,22 @@ async function run(){
 
   // Pass current user-configured pages count to accurately calculate pricing
   const fp = { ...S.serverFile, detectedPages: S.pages };
-  const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:S.range,rangeText:S.rt,staple:S.staple,collate:S.collate},machineId:'M-01',paymentMethod:S.pay})});
+
+  // Calculate effective range from user edits or reduced page count
+  let effectiveRange = S.range;
+  let effectiveRangeText = S.rt;
+  if (S.pl && Array.isArray(S.pl)) {
+    const activePages = S.pl.filter(p => !p.d).map(p => p.i);
+    if (activePages.length > 0 && activePages.length < S.pl.length) {
+      effectiveRange = 'custom';
+      effectiveRangeText = activePages.join(',');
+    }
+  } else if (S.pages < (S.serverFile.detectedPages || S.pages) && effectiveRange === 'all') {
+    effectiveRange = 'custom';
+    effectiveRangeText = '1-' + S.pages;
+  }
+
+  const r=await fetch(API_BASE+'/jobs',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({file:fp,options:{color:S.color,sides:S.sides,size:S.size,orient:S.orient,pps:S.pps,quality:S.quality,copies:S.copies,range:effectiveRange,rangeText:effectiveRangeText,staple:S.staple,collate:S.collate,pageList:S.pl||undefined},machineId:'M-01',paymentMethod:S.pay})});
   
   if(r.ok){
    const d=await r.json();currentJob=d.job;$('#jc').textContent=currentJob.jobCode;

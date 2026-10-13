@@ -57,6 +57,25 @@ export class JobService {
   }
 
   public static createJob(file: UploadedFileInfo, options: PrintOptions, machineId: string = config.defaultMachineId, paymentMethod: string = 'gpay'): PrintJob {
+    const safePages = Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1)));
+    file.detectedPages = safePages;
+
+    let rangeMode = options.range === 'custom' ? 'custom' : 'all';
+    let rangeString = typeof options.rangeText === 'string' ? options.rangeText.slice(0, 200).trim() : undefined;
+
+    // If pageList is provided, derive effective rangeText from non-deleted pages
+    const rawPageList = Array.isArray(options.pageList) ? options.pageList : undefined;
+    if (rawPageList && rawPageList.length > 0) {
+      const activePages = rawPageList.filter((p: any) => !p.d).map((p: any) => p.i);
+      if (activePages.length > 0 && activePages.length < rawPageList.length) {
+        rangeMode = 'custom';
+        rangeString = activePages.join(',');
+      }
+    } else if (safePages < (file.detectedPages || safePages) && rangeMode === 'all') {
+      rangeMode = 'custom';
+      rangeString = `1-${safePages}`;
+    }
+
     const safeOptions: PrintOptions = {
       color: (['bw', 'color'] as const).includes(options.color) ? options.color : 'bw',
       sides: (['single', 'double'] as const).includes(options.sides) ? options.sides : 'single',
@@ -65,13 +84,12 @@ export class JobService {
       pps: ([1, 2, 4, 6] as const).includes(options.pps as any) ? options.pps : 1,
       quality: (['draft', 'normal', 'high'] as const).includes(options.quality) ? options.quality : 'normal',
       copies: Math.min(99, Math.max(1, Math.floor(Number(options.copies) || 1))),
-      range: options.range === 'custom' ? 'custom' : 'all',
-      rangeText: typeof options.rangeText === 'string' ? options.rangeText.slice(0, 200) : undefined,
+      range: rangeMode as 'all' | 'custom',
+      rangeText: rangeString,
       staple: Boolean(options.staple),
-      collate: options.collate !== false
+      collate: options.collate !== false,
+      pageList: rawPageList
     };
-    const safePages = Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1)));
-    file.detectedPages = safePages;
     const jobCode = this.generateJobCode();
     const pricing = PricingService.calculate(safeOptions, safePages);
     const now = new Date().toISOString();

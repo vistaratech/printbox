@@ -136,12 +136,23 @@ async function processJob(job) {
         });
         console.log(`🚀 Sending "${path_1.default.basename(filePath)}" to printer...`);
         // Prepare printer options
+        const paperKindMap = {
+            'Letter': 1,
+            'Legal': 5,
+            'A3': 8,
+            'A4': 9,
+            'A5': 11
+        };
+        const paperSize = job.options.size || 'A4';
         const printOptions = {
             copies: job.options.copies || 1,
-            paperSize: job.options.size || 'A4',
+            paperSize: paperSize,
             monochrome: job.options.color === 'bw',
-            scale: 'fit'
+            scale: paperSize === 'A5' ? 'shrink' : 'fit'
         };
+        if (paperKindMap[paperSize]) {
+            printOptions.paperKind = paperKindMap[paperSize];
+        }
         if (job.options.orient === 'landscape' || job.options.orient === 'portrait') {
             printOptions.orientation = job.options.orient;
         }
@@ -163,7 +174,14 @@ async function processJob(job) {
         if (job.options.sides === 'double') {
             printOptions.side = 'duplex';
         }
-        if (job.options.range === 'custom' && job.options.rangeText) {
+        // Determine custom pages from pageList or rangeText
+        if (job.options.pageList && Array.isArray(job.options.pageList)) {
+            const activePages = job.options.pageList.filter((p) => !p.d).map((p) => p.i);
+            if (activePages.length > 0) {
+                printOptions.pages = activePages.join(',');
+            }
+        }
+        else if (job.options.range === 'custom' && job.options.rangeText) {
             printOptions.pages = job.options.rangeText;
         }
         console.log('Printer Options:', printOptions);
