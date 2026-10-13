@@ -898,6 +898,16 @@ async function sendToPrinter(jobCode, fileName) {
     const img = document.createElement('img');
     img.src = fileUrl;
     img.onload = () => triggerBrowserPrint(jobCode);
+    img.onerror = () => {
+      console.error('Image load failed:', fileUrl);
+      inFlightJobSet.delete(jobCode);
+      fetch(`${API}/kiosk/M-01/jobs/${jobCode}/fail`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: 'Could not load file for printing' })
+      }).catch(() => {});
+      refreshQueue();
+    };
     pageWrap.appendChild(img);
     printArea.appendChild(pageWrap);
     return;
@@ -1098,10 +1108,12 @@ function renderJobItems(jobs) {
     const isDone = j.status === 'completed' || printedJobs.has(j.jobCode);
 
     // Auto-Print Trigger (only for paid/queued jobs — NOT pending_payment)
+    // NOTE: do NOT pre-add to inFlightJobSet here — sendToPrinter() owns it.
+    // Pre-adding caused auto-print to early-return forever (job stuck, Print Now dead).
     const isPrintReady = j.status === 'payment_received' || j.status === 'queued' || j.status === 'sending_to_machine';
     if (!isDone && isPrintReady && autoPrintActive && !printedJobs.has(j.jobCode) && !inFlightJobSet.has(j.jobCode)) {
-      inFlightJobSet.add(j.jobCode);
-      setTimeout(() => sendToPrinter(j.jobCode, rawFile), 600);
+      const code = j.jobCode, fn = rawFile;
+      setTimeout(() => sendToPrinter(code, fn), 600);
     }
 
     return `
