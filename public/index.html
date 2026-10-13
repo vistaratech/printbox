@@ -723,15 +723,16 @@ let jobPollTimer = null;
 async function run(){
  go(4);$('#done').classList.add('hide');$('#again').classList.add('hide');Snd.pay();
  const draw=k=>{
+  const isAllDone = k >= 2;
   $('#stl').innerHTML=ST.map((t,i)=>{
-    const isDone = i < k;
-    const isCurrent = i === k;
+    const isDone = isAllDone || (i < k);
+    const isCurrent = !isAllDone && (i === k);
     const badge = isDone 
       ? '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>'
       : (isCurrent ? '<i class="st-spinner"></i>' : (i + 1));
     return '<div class="st '+(isDone?'ok':isCurrent?'go':'')+'"><span class="d">'+badge+'</span><b>'+t+'</b></div>';
   }).join('');
-  $('#pb').style.width=Math.min(100, Math.max(25, (k===2?100:(k+1)/ST.length*100)))+'%';
+  $('#pb').style.width=Math.min(100, Math.max(25, (k>=2?100:(k+1)/ST.length*100)))+'%';
   $('#prn').setAttribute('class','prn'+(k===1?' on':k>=2?' out':''));
   ctr(k);
  };

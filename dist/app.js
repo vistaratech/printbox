@@ -59,18 +59,28 @@ app.use('/api/payments', paymentLimiter);
 app.use('/uploads', express_1.default.static(config_1.config.uploadDir, { maxAge: '1h' }));
 // ── Serve Frontend static files and pages (public/) ──
 const publicDir = path_1.default.resolve(process.cwd(), 'public');
-app.use(express_1.default.static(publicDir, { maxAge: '1h' }));
+app.use(express_1.default.static(publicDir, {
+    setHeaders: (res, filePath) => {
+        if (filePath.endsWith('.html')) {
+            res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+        }
+    }
+}));
 // ── Serve Frontend Pages ──
 app.get('/', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path_1.default.join(publicDir, 'index.html'));
 });
 app.get('/sticker', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path_1.default.join(publicDir, 'sticker.html'));
 });
 app.get('/admin', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path_1.default.join(publicDir, 'admin.html'));
 });
 app.get('/kiosk', (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.sendFile(path_1.default.join(publicDir, 'kiosk.html'));
 });
 // Health check endpoint

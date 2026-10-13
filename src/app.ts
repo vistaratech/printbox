@@ -64,22 +64,32 @@ app.use('/uploads', express.static(config.uploadDir, { maxAge: '1h' }));
 
 // ── Serve Frontend static files and pages (public/) ──
 const publicDir = path.resolve(process.cwd(), 'public');
-app.use(express.static(publicDir, { maxAge: '1h' }));
+app.use(express.static(publicDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    }
+  }
+}));
 
 // ── Serve Frontend Pages ──
 app.get('/', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(publicDir, 'index.html'));
 });
 
 app.get('/sticker', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(publicDir, 'sticker.html'));
 });
 
 app.get('/admin', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(publicDir, 'admin.html'));
 });
 
 app.get('/kiosk', (_req: Request, res: Response) => {
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.sendFile(path.join(publicDir, 'kiosk.html'));
 });
 
