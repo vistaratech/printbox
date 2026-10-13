@@ -14,7 +14,12 @@ exports.savePayment = savePayment;
 exports.getJobCount = getJobCount;
 const better_sqlite3_1 = __importDefault(require("better-sqlite3"));
 const path_1 = __importDefault(require("path"));
-const DB_PATH = path_1.default.resolve(process.cwd(), 'printbox.db');
+const fs_1 = __importDefault(require("fs"));
+const DATA_DIR = path_1.default.resolve(process.cwd(), 'data');
+if (!fs_1.default.existsSync(DATA_DIR)) {
+    fs_1.default.mkdirSync(DATA_DIR, { recursive: true });
+}
+const DB_PATH = process.env.DB_PATH || path_1.default.resolve(DATA_DIR, 'printbox.db');
 let db;
 function getDb() {
     if (!db) {

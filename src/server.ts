@@ -7,7 +7,7 @@ const PORT = parseInt(process.env.PORT || String(config.port), 10);
 
 // Initialize database (creates tables if not exist)
 getDb();
-console.log('[Database] SQLite initialized at printbox.db');
+console.log('[Database] SQLite initialized at data/printbox.db');
 
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('====================================================');

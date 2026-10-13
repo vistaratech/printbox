@@ -10,7 +10,7 @@ const databaseService_1 = require("./services/databaseService");
 const PORT = parseInt(process.env.PORT || String(config_1.config.port), 10);
 // Initialize database (creates tables if not exist)
 (0, databaseService_1.getDb)();
-console.log('[Database] SQLite initialized at printbox.db');
+console.log('[Database] SQLite initialized at data/printbox.db');
 const server = app_1.default.listen(PORT, '0.0.0.0', () => {
     console.log('====================================================');
     console.log(`🖨️  PrintBox Backend API running on port ${PORT}`);
