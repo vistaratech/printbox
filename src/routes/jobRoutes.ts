@@ -1,4 +1,5 @@
 import { Router, Request, Response } from 'express';
+import path from 'path';
 import { JobService } from '../services/jobService';
 import { SseService } from '../services/sseService';
 import { config } from '../config';
@@ -22,11 +23,13 @@ router.post('/', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Print options are required' });
     }
 
+    const resolvedFilePath = file.filePath || (file.fileName ? path.join(config.uploadDir, path.basename(file.fileName)) : '');
+
     const fileInfo: UploadedFileInfo = {
       id: file.id || 'unknown',
       originalName: String(file.originalName || 'document').slice(0, 255),
       fileName: String(file.fileName).slice(0, 255),
-      filePath: file.filePath || '',
+      filePath: resolvedFilePath,
       fileSize: Math.max(0, Number(file.fileSize) || 0),
       mimeType: String(file.mimeType || 'application/octet-stream').slice(0, 100),
       detectedPages: Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1))),

@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
 :root {
   --bg-deep: #05070e;
@@ -535,6 +536,19 @@ body::after {
   gap: 6px;
 }
 
+.status-badge-pending {
+  color: var(--amber);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 6px 12px;
+  background: rgba(255, 183, 3, 0.12);
+  border: 1px solid rgba(255, 183, 3, 0.3);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .empty-feed {
   color: var(--text-muted);
   text-align: center;
@@ -757,7 +771,7 @@ function toggleAutoPrint() {
 /**
  * Trigger print via hidden iframe to Android Spooler / Epson Print Enabler
  */
-function sendToPrinter(jobCode, fileName) {
+async function sendToPrinter(jobCode, fileName) {
   if (!fileName || inFlightJobSet.has(jobCode)) return;
   inFlightJobSet.add(jobCode);
 
@@ -766,23 +780,119 @@ function sendToPrinter(jobCode, fileName) {
   const statusTxt = document.getElementById('machineStatusText');
   if (statusTxt) statusTxt.textContent = `Printing ${jobCode}…`;
 
-  // Notify server that hardware printing has started
-  fetch(`${API}/kiosk/M-01/jobs/${jobCode}/progress`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ printedPages: 1, statusMessage: `Printing ${jobCode}…` })
-  }).catch(() => {});
+  // 1. Notify Backend that printing started (syncs with student's mobile live screen)
+  try {
+    await fetch(`${API}/kiosk/M-01/jobs/${jobCode}/progress`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ printedPages: 1, statusMessage: 'Printing on Epson L3250…' })
+    });
+  } catch (_) {}
+
+  // 2. Fully Kiosk Browser Native Print Hook (Lenovo Pad)
+  if (window.fully && typeof window.fully.print === 'function') {
+    try {
+      window.fully.print(fileUrl);
+      setTimeout(() => finishJob(jobCode), 3500);
+      return;
+    } catch (_) {}
+  }
+
+  // 3. Document type check
+  const ext = fileName.split('.').pop().toLowerCase();
+  const isPdf = ext === 'pdf';
+  const isImage = /^(jpe?g|png|webp|gif)$/.test(ext);
 
   const frame = document.getElementById('printWorkerFrame');
+
+  // 4. PDF.js canvas rendering (Native Android & Mobile Friendly)
+  if (isPdf && typeof pdfjsLib !== 'undefined') {
+    try {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      const loadingTask = pdfjsLib.getDocument(fileUrl);
+      const pdf = await loadingTask.promise;
+      
+      const doc = frame.contentWindow.document;
+      doc.open();
+      doc.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <style>
+            @page { size: auto; margin: 0mm; }
+            body { margin: 0; padding: 0; background: #fff; }
+            .page-wrap { display: block; page-break-after: always; width: 100%; text-align: center; }
+            canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+          </style>
+        </head>
+        <body><div id="pages"></div></body>
+        </html>
+      `);
+      doc.close();
+
+      const pagesContainer = doc.getElementById('pages');
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = doc.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        
+        const wrap = doc.createElement('div');
+        wrap.className = 'page-wrap';
+        wrap.appendChild(canvas);
+        pagesContainer.appendChild(wrap);
+      }
+
+      setTimeout(() => {
+        try {
+          frame.contentWindow.focus();
+          frame.contentWindow.print();
+        } catch (_) {
+          window.open(fileUrl, '_blank');
+        }
+        setTimeout(() => finishJob(jobCode), 3500);
+      }, 500);
+      return;
+    } catch (err) {
+      console.warn('PDF.js render fallback:', err);
+    }
+  }
+
+  // 5. Image printing
+  if (isImage) {
+    const doc = frame.contentWindow.document;
+    doc.open();
+    doc.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <style>
+          @page { size: auto; margin: 0mm; }
+          body { margin: 0; padding: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: #fff; }
+          img { max-width: 100%; max-height: 100vh; object-fit: contain; }
+        </style>
+      </head>
+      <body>
+        <img src="${fileUrl}" onload="setTimeout(()=>{ try{ window.focus(); window.print(); }catch(_){} }, 300)" />
+      </body>
+      </html>
+    `);
+    doc.close();
+    setTimeout(() => finishJob(jobCode), 4000);
+    return;
+  }
+
+  // 6. Direct frame fallback
   frame.onload = function() {
     try {
       frame.contentWindow.focus();
       frame.contentWindow.print();
-      finishJob(jobCode);
     } catch (e) {
       window.open(fileUrl, '_blank');
-      finishJob(jobCode);
     }
+    setTimeout(() => finishJob(jobCode), 3000);
   };
   frame.src = fileUrl;
 }
@@ -903,17 +1013,16 @@ function renderJobItems(jobs) {
     const price = (j.pricing && j.pricing.totalPrice) || 0;
     const displayName = (j.file && (j.file.originalName || j.file.fileName)) || j.fileName || '-';
     const rawFile = (j.file && j.file.fileName) || j.fileName;
-    const isPaid = (j.status === 'payment_received' || j.status === 'queued' || j.status === 'sending_to_machine');
-    const isDone = (j.status === 'completed' || printedJobs.has(j.jobCode));
-    const isPending = (j.status === 'pending_payment');
+    const isDone = j.status === 'completed' || printedJobs.has(j.jobCode);
 
-    // Auto-Print Trigger: STRICTLY only for PAID jobs that are not completed yet!
-    if (isPaid && !isDone && autoPrintActive && !printedJobs.has(j.jobCode)) {
+    // Auto-Print Trigger (Test mode: triggers for all active jobs immediately)
+    if (!isDone && autoPrintActive && !printedJobs.has(j.jobCode) && !inFlightJobSet.has(j.jobCode)) {
+      inFlightJobSet.add(j.jobCode);
       setTimeout(() => sendToPrinter(j.jobCode, rawFile), 600);
     }
 
     return `
-      <div class="job-item ${isDone ? 'done' : isPaid ? 'active' : ''}">
+      <div class="job-item ${isDone ? 'done' : 'active'}">
         <div class="job-code-tag">${j.jobCode}</div>
         <div class="job-body">
           <b>${copies} ${copies > 1 ? 'copies' : 'copy'} · ₹${price.toFixed(2)}</b>
@@ -927,18 +1036,14 @@ function renderJobItems(jobs) {
                 </svg>
                 Ready
                </span>` 
-            : isPaid
-              ? `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
-                    <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
-                    <rect x="6" y="14" width="12" height="8" rx="1"/>
-                  </svg>
-                  Print Now
-                 </button>`
-              : `<span style="font-size:12px;font-weight:700;color:var(--amber);background:rgba(255,183,3,0.12);border:1px solid rgba(255,183,3,0.3);padding:6px 12px;border-radius:12px;">
-                  Waiting Payment
-                 </span>`
+            : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+                  <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
+                  <rect x="6" y="14" width="12" height="8" rx="1"/>
+                </svg>
+                Print Now
+               </button>`
           }
         </div>
       </div>
@@ -949,7 +1054,7 @@ function renderJobItems(jobs) {
 function updateMetrics(jobs) {
   const todayStr = new Date().toDateString();
   document.getElementById('countToday').textContent = jobs.filter(j => new Date(j.createdAt).toDateString() === todayStr).length;
-  document.getElementById('countWaiting').textContent = jobs.filter(j => (j.status === 'payment_received' || j.status === 'queued') && !printedJobs.has(j.jobCode)).length;
+  document.getElementById('countWaiting').textContent = jobs.filter(j => j.status !== 'completed' && !printedJobs.has(j.jobCode)).length;
   document.getElementById('countCompleted').textContent = jobs.filter(j => j.status === 'completed' || printedJobs.has(j.jobCode)).length;
 }
 
@@ -967,7 +1072,7 @@ async function sendKioskHeartbeat() {
     await fetch(API + '/kiosk/M-01/heartbeat', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ machineId: 'M-01' })
+      body: JSON.stringify({ paperRemaining: 420, tonerLevelPercent: 95 })
     });
   } catch (_) {}
 }

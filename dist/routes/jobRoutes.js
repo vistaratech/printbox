@@ -1,6 +1,10 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = require("express");
+const path_1 = __importDefault(require("path"));
 const jobService_1 = require("../services/jobService");
 const sseService_1 = require("../services/sseService");
 const config_1 = require("../config");
@@ -18,11 +22,12 @@ router.post('/', (req, res) => {
         if (!options) {
             return res.status(400).json({ error: 'Print options are required' });
         }
+        const resolvedFilePath = file.filePath || (file.fileName ? path_1.default.join(config_1.config.uploadDir, path_1.default.basename(file.fileName)) : '');
         const fileInfo = {
             id: file.id || 'unknown',
             originalName: String(file.originalName || 'document').slice(0, 255),
             fileName: String(file.fileName).slice(0, 255),
-            filePath: file.filePath || '',
+            filePath: resolvedFilePath,
             fileSize: Math.max(0, Number(file.fileSize) || 0),
             mimeType: String(file.mimeType || 'application/octet-stream').slice(0, 100),
             detectedPages: Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1))),

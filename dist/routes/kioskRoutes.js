@@ -45,7 +45,7 @@ router.post('/:machineId/jobs/:jobCode/complete', (req, res) => {
     if (!job) {
         return res.status(404).json({ error: 'Job not found' });
     }
-    // Automatically deduct printed sheets from paper tray
+    // Deduct paper sheets from machine paper tray
     const machine = machineService_1.MachineService.getMachine(machineId);
     if (machine) {
         const sheetsDeducted = job.totalPhysicalPages || 1;
