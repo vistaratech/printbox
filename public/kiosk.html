@@ -1,29 +1,625 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="utf-8">
+<head>
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>PrintBox Kiosk</title>
+<title>PrintBox Kiosk & Smart Terminal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#07090f;--tx:#fff;--c:#19c3f0;--m:#ff2e93;--y:#ffd60a;--ok:#14b86a;--ln:#1a1f2e;--bd:#252b3d}
-*{box-sizing:border-box;margin:0}body{background:radial-gradient(circle at 20% 20%,#101728,#07090f 70%);color:var(--tx);font-family:'Bricolage Grotesque',system-ui,sans-serif;min-height:100vh;display:grid;place-items:center;overflow:hidden}.stage{width:min(1400px,100vw);height:min(900px,100vh);display:grid;grid-template-columns:1fr 1fr;gap:24px;padding:24px}
-.left,.right{background:rgba(255,255,255,.04);backdrop-filter:blur(20px) saturate(160%);border:1px solid var(--bd);border-radius:28px;padding:34px;position:relative;overflow:hidden;box-shadow:0 20px 60px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.06)}.left::before{content:"";position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,var(--c),transparent 70%);opacity:.14;top:-180px;left:-180px;animation:drift 8s ease-in-out infinite alternate}.right::before{content:"";position:absolute;width:400px;height:400px;border-radius:50%;background:radial-gradient(circle,var(--m),transparent 70%);opacity:.1;bottom:-150px;right:-150px;animation:drift 9s ease-in-out infinite alternate-reverse}
-@keyframes drift{to{transform:translate(60px,40px) scale(1.1)}}
-.brand{font-size:22px;font-weight:800;display:flex;gap:10px;align-items:center}.brand i{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,var(--c),var(--m));border:2px solid var(--y);box-shadow:0 4px 16px rgba(25,195,240,.35)}
-.eyebrow{color:var(--c);font-weight:800;letter-spacing:2px;font-size:13px;text-transform:uppercase}.hero{font-size:64px;line-height:.95;font-weight:800;margin:18px 0 10px}.hero b{background:linear-gradient(90deg,var(--c),var(--m),var(--y));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-size:200% auto;animation:shimmer 4s linear infinite}@keyframes shimmer{to{background-position:200% center}}.sub{color:#b8c0d8;font-size:19px}.qr-zone{display:grid;place-items:center;padding:30px;margin:26px 0}.qr{width:min(260px,38vw);aspect-ratio:1;background:#fff;border-radius:18px;display:grid;place-items:center;position:relative;box-shadow:0 0 0 10px var(--y),0 24px 80px rgba(25,195,240,.28);animation:qrfloat 3s ease-in-out infinite}@keyframes qrfloat{50%{transform:translateY(-6px)}}.qr svg{width:78%;height:78%}.url{font-family:ui-monospace,Consolas,monospace;color:var(--y);font-size:17px;font-weight:700}.status{display:flex;gap:10px;align-items:center;background:rgba(20,184,106,.12);border:1px solid rgba(20,184,106,.4);color:var(--ok);padding:12px 14px;border-radius:16px;font-weight:800}.status.off{background:rgba(255,77,77,.1);border-color:rgba(255,77,77,.4);color:var(--danger)}.dot{width:10px;height:10px;border-radius:50%;background:var(--ok);animation:radar 1.6s infinite}.status.off .dot{background:var(--danger);animation:none}@keyframes radar{70%{box-shadow:0 0 0 12px rgba(20,184,106,0)}}
-.clock{font-size:14px;color:#b8c0d8;font-weight:700;text-align:right}
-.right{display:flex;flex-direction:column}.queue-title{font-size:22px;font-weight:800;display:flex;justify-content:space-between;align-items:center}.queue-title small{color:#b8c0d8;font-weight:600}.queue{flex:1;margin-top:14px;display:flex;flex-direction:column;gap:12px;overflow:hidden}.job{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:18px;padding:16px;animation:pop .5s;transition:border-color .4s,background .4s}.job .code{font-family:ui-monospace,Consolas,monospace;background:var(--y);color:#111;font-weight:800;padding:8px 12px;border-radius:10px;font-size:15px;transform:rotate(-2deg)}.job b{font-size:18px}.job small{color:#b8c0d8;display:block}.prog{height:8px;background:var(--ln);border-radius:8px;overflow:hidden;margin-top:8px}.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--m),var(--y),var(--c));background-size:300% 100%;animation:progflow 1.5s linear infinite;transition:width .5s}@keyframes progflow{to{background-position:100% 0}}.job.done{border-color:var(--ok);background:rgba(20,184,106,.06)}.job.active{border-color:var(--y);background:rgba(255,214,10,.05)}.meta{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:18px}.meta div{background:rgba(255,255,255,.05);border:1px solid var(--bd);border-radius:16px;padding:14px;text-align:center}.meta b{display:block;font-size:24px}.meta small{color:#b8c0d8}.empty{color:#b8c0d8;text-align:center;padding:40px 10px;border:1px dashed var(--bd);border-radius:18px}.sticker{position:absolute;font-weight:800;border:2px solid #111;border-radius:10px;padding:5px 12px;background:var(--y);color:#111;box-shadow:3px 3px 0 #111}.sticker.a{top:24px;right:120px;transform:rotate(7deg)}.sticker.b{bottom:180px;left:20px;transform:rotate(-6deg);background:var(--c)}
-@keyframes pop{from{opacity:0;transform:translateY(20px) scale(.96)}}
-@media(max-width:900px){.stage{grid-template-columns:1fr;height:auto}.hero{font-size:48px}.sticker{display:none}}
-</style></head><body><div class="stage">
-<section class="left"><div style="display:flex;justify-content:space-between;align-items:center"><div class="brand"><i></i> PrintBox</div><div class="clock" id="clock">--:--</div></div><div class="eyebrow" style="margin-top:34px">Smart printing kiosk</div><h1 class="hero">Scan. Upload.<br><b>Print it.</b></h1><p class="sub">No app, no queue. Upload from your phone and pick up pages here.</p><div class="qr-zone"><div class="qr"><svg viewBox="0 0 100 100"><rect width="100" height="100" fill="#fff"/><g fill="#111"><rect x="8" y="8" width="26" height="26" rx="3"/><rect x="13" y="13" width="16" height="16" fill="#fff"/><rect x="17" y="17" width="8" height="8" fill="#111"/><rect x="66" y="8" width="26" height="26" rx="3"/><rect x="71" y="13" width="16" height="16" fill="#fff"/><rect x="75" y="17" width="8" height="8" fill="#111"/><rect x="8" y="66" width="26" height="26" rx="3"/><rect x="13" y="71" width="16" height="16" fill="#fff"/><rect x="17" y="75" width="8" height="8" fill="#111"/><rect x="38" y="10" width="6" height="6"/><rect x="52" y="20" width="6" height="6"/><rect x="42" y="42" width="16" height="16" rx="3" fill="#ff2e93"/><rect x="68" y="40" width="6" height="6"/><rect x="82" y="50" width="6" height="6"/><rect x="38" y="70" width="6" height="6"/><rect x="52" y="82" width="6" height="6"/><rect x="70" y="70" width="6" height="6"/><rect x="82" y="82" width="6" height="6"/></g></svg></div></div><div class="url" id="url">http://localhost:3000</div><div class="status" id="status"><span class="dot"></span> <span id="statusText">Connecting…</span></div><span class="sticker a">₹1/page</span><span class="sticker b">No queue</span></section>
-<aside class="right"><div class="queue-title">Live queue <small id="count">0 jobs</small></div><div class="queue" id="queue"><div class="empty">Waiting for print jobs…</div></div><div class="meta"><div><b id="today">0</b><small>Today prints</small></div><div><b id="wait">0</b><small>Waiting</small></div><div><b id="ready">0</b><small>Ready</small></div></div></aside>
+:root {
+  --bg: #07090f;
+  --tx: #ffffff;
+  --c: #19c3f0;
+  --m: #ff2e93;
+  --y: #ffd60a;
+  --ok: #14b86a;
+  --ln: #1a1f2e;
+  --bd: #252b3d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  background: radial-gradient(circle at 20% 20%, #101728, #07090f 70%);
+  color: var(--tx);
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  overflow-x: hidden;
+  padding: 16px;
+}
+.stage {
+  width: min(1400px, 100vw);
+  height: min(920px, 98vh);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+.left, .right {
+  background: rgba(255, 255, 255, 0.04);
+  backdrop-filter: blur(24px) saturate(160%);
+  border: 1px solid var(--bd);
+  border-radius: 28px;
+  padding: 30px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+.left::before {
+  content: "";
+  position: absolute;
+  width: 500px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--c), transparent 70%);
+  opacity: 0.15;
+  top: -180px;
+  left: -180px;
+  animation: drift 8s ease-in-out infinite alternate;
+}
+.right::before {
+  content: "";
+  position: absolute;
+  width: 400px;
+  height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--m), transparent 70%);
+  opacity: 0.12;
+  bottom: -150px;
+  right: -150px;
+  animation: drift 9s ease-in-out infinite alternate-reverse;
+}
+@keyframes drift { to { transform: translate(60px, 40px) scale(1.1); } }
+
+.top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.brand {
+  font-size: 24px;
+  font-weight: 800;
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.brand i {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, var(--c), var(--m));
+  border: 2px solid var(--y);
+  box-shadow: 0 4px 16px rgba(25, 195, 240, 0.4);
+}
+.clock {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 15px;
+  color: #b8c0d8;
+  font-weight: 700;
+}
+
+.eyebrow {
+  color: var(--c);
+  font-weight: 800;
+  letter-spacing: 2px;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-top: 24px;
+}
+.hero {
+  font-size: 56px;
+  line-height: 0.95;
+  font-weight: 800;
+  margin: 14px 0 8px;
+}
+.hero b {
+  background: linear-gradient(90deg, var(--c), var(--m), var(--y));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% auto;
+  animation: shimmer 4s linear infinite;
+}
+@keyframes shimmer { to { background-position: 200% center; } }
+.sub {
+  color: #b8c0d8;
+  font-size: 17px;
+  line-height: 1.4;
+}
+
+.qr-zone {
+  display: grid;
+  place-items: center;
+  padding: 20px 0;
+  margin: auto 0;
+}
+.qr {
+  width: min(240px, 36vw);
+  aspect-ratio: 1;
+  background: #ffffff;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  position: relative;
+  box-shadow: 0 0 0 10px var(--y), 0 24px 80px rgba(25, 195, 240, 0.35);
+  animation: qrfloat 3s ease-in-out infinite;
+}
+@keyframes qrfloat { 50% { transform: translateY(-6px); } }
+.qr svg { width: 78%; height: 78%; }
+
+.url-box {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+}
+.url {
+  font-family: 'JetBrains Mono', monospace;
+  color: var(--y);
+  font-size: 15px;
+  font-weight: 700;
+}
+.status {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  background: rgba(20, 184, 106, 0.12);
+  border: 1px solid rgba(20, 184, 106, 0.4);
+  color: var(--ok);
+  padding: 8px 14px;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 13px;
+}
+.status.off {
+  background: rgba(255, 77, 77, 0.1);
+  border-color: rgba(255, 77, 77, 0.4);
+  color: #ff4d4d;
+}
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  animation: radar 1.6s infinite;
+}
+.status.off .dot { background: #ff4d4d; animation: none; }
+@keyframes radar { 70% { box-shadow: 0 0 0 10px rgba(20, 184, 106, 0); } }
+
+/* Controls Header */
+.queue-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+.queue-title {
+  font-size: 20px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.queue-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.toggle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--bd);
+  color: #b8c0d8;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.toggle-btn.active {
+  background: rgba(20, 184, 106, 0.2);
+  border-color: var(--ok);
+  color: #4ade80;
+}
+
+.test-btn {
+  background: linear-gradient(135deg, rgba(25, 195, 240, 0.2), rgba(255, 46, 147, 0.2));
+  border: 1px solid rgba(25, 195, 240, 0.4);
+  color: #fff;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.test-btn:hover {
+  background: linear-gradient(135deg, var(--c), var(--m));
+  color: #111;
+}
+
+.queue {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+.queue::-webkit-scrollbar { width: 4px; }
+.queue::-webkit-scrollbar-thumb { background: var(--bd); border-radius: 4px; }
+
+.job {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 12px;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 14px;
+  animation: pop 0.4s ease-out;
+  transition: all 0.3s;
+}
+.job .code {
+  font-family: 'JetBrains Mono', monospace;
+  background: var(--y);
+  color: #111;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 8px;
+  font-size: 14px;
+  transform: rotate(-1.5deg);
+}
+.job-info b { font-size: 16px; display: block; }
+.job-info small { color: #b8c0d8; font-size: 12px; display: block; margin-top: 2px; }
+
+.print-action-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: none;
+  font-weight: 800;
+  font-size: 13px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s;
+}
+.print-action-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.6);
+}
+.badge-done {
+  color: var(--ok);
+  font-weight: 800;
+  font-size: 13px;
+  padding: 6px 10px;
+  background: rgba(20, 184, 106, 0.1);
+  border-radius: 10px;
+}
+
+.prog {
+  height: 6px;
+  background: var(--ln);
+  border-radius: 6px;
+  overflow: hidden;
+  margin-top: 6px;
+}
+.prog i {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--c), var(--m), var(--y));
+  transition: width 0.4s;
+}
+.empty {
+  color: #b8c0d8;
+  text-align: center;
+  padding: 50px 20px;
+  border: 1px dashed var(--bd);
+  border-radius: 18px;
+  font-size: 15px;
+}
+
+.meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+  margin-top: 14px;
+}
+.meta div {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--bd);
+  border-radius: 16px;
+  padding: 12px;
+  text-align: center;
+}
+.meta b {
+  display: block;
+  font-size: 22px;
+  font-family: 'JetBrains Mono', monospace;
+}
+.meta small { color: #b8c0d8; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+@keyframes pop { from { opacity: 0; transform: translateY(14px); } }
+
+@media(max-width: 900px) {
+  .stage { grid-template-columns: 1fr; height: auto; }
+  .hero { font-size: 42px; }
+  .left, .right { min-height: 480px; }
+}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <!-- Left Column: Kiosk Brand, Instructions, QR Code -->
+  <section class="left">
+    <div class="top-bar">
+      <div class="brand"><i></i> PrintBox</div>
+      <div class="clock" id="clock">--:--</div>
+    </div>
+    
+    <div class="eyebrow">Self-Service Printing Terminal</div>
+    <h1 class="hero">Scan. Upload.<br><b>Print it.</b></h1>
+    <p class="sub">Scan the QR code with any smartphone camera. No app download needed.</p>
+    
+    <div class="qr-zone">
+      <div class="qr">
+        <svg viewBox="0 0 100 100">
+          <rect width="100" height="100" fill="#fff"/>
+          <g fill="#111">
+            <rect x="8" y="8" width="26" height="26" rx="3"/>
+            <rect x="13" y="13" width="16" height="16" fill="#fff"/>
+            <rect x="17" y="17" width="8" height="8" fill="#111"/>
+            <rect x="66" y="8" width="26" height="26" rx="3"/>
+            <rect x="71" y="13" width="16" height="16" fill="#fff"/>
+            <rect x="75" y="17" width="8" height="8" fill="#111"/>
+            <rect x="8" y="66" width="26" height="26" rx="3"/>
+            <rect x="13" y="71" width="16" height="16" fill="#fff"/>
+            <rect x="17" y="75" width="8" height="8" fill="#111"/>
+            <rect x="38" y="10" width="6" height="6"/>
+            <rect x="52" y="20" width="6" height="6"/>
+            <rect x="42" y="42" width="16" height="16" rx="3" fill="#ff2e93"/>
+            <rect x="68" y="40" width="6" height="6"/>
+            <rect x="82" y="50" width="6" height="6"/>
+            <rect x="38" y="70" width="6" height="6"/>
+            <rect x="52" y="82" width="6" height="6"/>
+            <rect x="70" y="70" width="6" height="6"/>
+            <rect x="82" y="82" width="6" height="6"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    
+    <div class="url-box">
+      <div class="url" id="urlDisplay">printbox.local</div>
+      <div class="status" id="statusBadge">
+        <span class="dot"></span>
+        <span id="statusText">Connecting…</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Right Column: Queue & Device Print Controller -->
+  <aside class="right">
+    <div class="queue-header">
+      <div class="queue-title">
+        <span>Live Print Queue</span>
+        <span id="countBadge" style="font-size: 13px; color: var(--c); font-weight: 700;">(0 jobs)</span>
+      </div>
+      <div class="queue-controls">
+        <button class="toggle-btn" id="autoPrintToggle" onclick="toggleAutoPrint()">
+          <span id="autoPrintIcon">⚡</span> Auto-Print: <b id="autoPrintLabel">OFF</b>
+        </button>
+        <button class="test-btn" onclick="testDevicePrint()">
+          🧪 Test Print
+        </button>
+      </div>
+    </div>
+
+    <div class="queue" id="queueList">
+      <div class="empty">Waiting for print jobs…</div>
+    </div>
+
+    <div class="meta">
+      <div>
+        <b id="todayCount">0</b>
+        <small>Today Prints</small>
+      </div>
+      <div>
+        <b id="waitingCount">0</b>
+        <small>Waiting</small>
+      </div>
+      <div>
+        <b id="readyCount">0</b>
+        <small>Completed</small>
+      </div>
+    </div>
+  </aside>
 </div>
+
+<!-- Invisible iframe for Android Web Printing -->
+<iframe id="printFrame" style="position:fixed;right:100%;bottom:100%;width:0;height:0;border:0;opacity:0;"></iframe>
+
 <script>
-const API=location.origin+'/api';
-async function load(){try{const r=await fetch(API+'/jobs');if(!r.ok)throw new Error('HTTP '+r.status);const d=await r.json();const jobs=d.jobs||d;render(jobs);stats(jobs)}catch(e){document.querySelector('#status').classList.add('off');document.querySelector('#statusText').textContent='Backend offline'}try{const m=await (await fetch(API+'/machines/M-01')).json();const x=m.machine||{};const st=document.querySelector('#status');st.classList.toggle('off',!x.isOnline);document.querySelector('#statusText').textContent=x.isOnline?('Machine M-01 · Ready · Paper: '+x.paperRemaining+' sheets'):'Machine M-01 · Offline'}catch(e){}}
-function render(jobs){const q=document.querySelector('#queue');document.querySelector('#count').textContent=jobs.length+' jobs';if(!jobs.length){q.innerHTML='<div class="empty">Waiting for print jobs…</div>';return}q.innerHTML=jobs.slice(0,5).map(j=>{const pages=(j.options&&j.options.copies)||1;const amount=((j.pricing&&j.pricing.totalPrice)||0);const fname=j.file?(j.file.originalName||j.file.fileName):(j.fileName||'-');const pct=j.totalPhysicalPages?Math.min(100,((j.printedPages||0)/j.totalPhysicalPages)*100):0;return '<div class="job '+(j.status==='completed'?'done':j.status==='printing'?'active':'')+'"><span class="code">'+j.jobCode+'</span><div><b>'+pages+' pages · ₹'+amount.toFixed(2)+'</b><small>'+fname+'</small>'+(j.status==='printing'?'<div class="prog"><i style="width:'+pct+'%"></i></div>':'')+'</div><span>'+(j.status==='completed'?'Ready':j.status==='printing'?'Printing':'Waiting')+'</span></div>'}).join('')}
-function stats(jobs){const today=new Date().toDateString();document.querySelector('#today').textContent=jobs.filter(j=>new Date(j.createdAt).toDateString()===today).length;document.querySelector('#wait').textContent=jobs.filter(j=>j.status!=='completed').length;document.querySelector('#ready').textContent=jobs.filter(j=>j.status==='completed').length}
-function tick(){const d=new Date();document.querySelector('#clock').textContent=d.toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit'})}tick();setInterval(tick,1000);
-document.querySelector('#url').textContent=location.host;
-load();setInterval(load,4000);
-</script></body></html>
+const API = location.origin + '/api';
+let autoPrintEnabled = localStorage.getItem('pb_autoprint') === 'true';
+let printedJobs = new Set(JSON.parse(localStorage.getItem('pb_printed_jobs') || '[]'));
+
+function updateAutoPrintUI() {
+  const btn = document.getElementById('autoPrintToggle');
+  const lbl = document.getElementById('autoPrintLabel');
+  if (autoPrintEnabled) {
+    btn.classList.add('active');
+    lbl.textContent = 'ON';
+  } else {
+    btn.classList.remove('active');
+    lbl.textContent = 'OFF';
+  }
+}
+updateAutoPrintUI();
+
+function toggleAutoPrint() {
+  autoPrintEnabled = !autoPrintEnabled;
+  localStorage.setItem('pb_autoprint', String(autoPrintEnabled));
+  updateAutoPrintUI();
+}
+
+/**
+ * Trigger print on this Android Device (via iframe and Android Print Manager)
+ */
+function triggerDevicePrint(jobCode, fileName) {
+  if (!fileName) return;
+  const fileUrl = location.origin + '/uploads/' + encodeURIComponent(fileName);
+  
+  // Use a hidden iframe or open direct print view
+  const frame = document.getElementById('printFrame');
+  frame.onload = function() {
+    try {
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      markJobDone(jobCode);
+    } catch (e) {
+      // Fallback: open directly if iframe printing is blocked
+      window.open(fileUrl, '_blank');
+      markJobDone(jobCode);
+    }
+  };
+  frame.src = fileUrl;
+}
+
+async function markJobDone(jobCode) {
+  printedJobs.add(jobCode);
+  localStorage.setItem('pb_printed_jobs', JSON.stringify([...printedJobs]));
+  try {
+    await fetch(`${API}/kiosk/M-01/jobs/${jobCode}/complete`, { method: 'POST' });
+  } catch (_) {}
+  loadJobs();
+}
+
+/**
+ * Quick Test Print to verify Epson connection
+ */
+function testDevicePrint() {
+  const testHtml = `
+    <html>
+    <head><title>PrintBox Test</title></head>
+    <body style="font-family:sans-serif;text-align:center;padding:40px;">
+      <h2>🖨️ PrintBox Kiosk Test Page</h2>
+      <p>Connection: Android Device ➔ Epson L3250</p>
+      <p>Timestamp: ${new Date().toLocaleString()}</p>
+      <hr style="margin:20px 0;">
+      <p><b>Status: Connected and Working Perfectly!</b></p>
+    </body>
+    </html>
+  `;
+  const frame = document.getElementById('printFrame');
+  const doc = frame.contentWindow.document;
+  doc.open();
+  doc.write(testHtml);
+  doc.close();
+  setTimeout(() => {
+    frame.contentWindow.focus();
+    frame.contentWindow.print();
+  }, 400);
+}
+
+async function loadJobs() {
+  try {
+    const res = await fetch(API + '/jobs');
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const jobs = data.jobs || data;
+    renderQueue(jobs);
+    updateStats(jobs);
+  } catch (err) {
+    document.getElementById('statusBadge').classList.add('off');
+    document.getElementById('statusText').textContent = 'Server Offline';
+  }
+
+  // Machine status
+  try {
+    const mRes = await fetch(API + '/machines/M-01');
+    const mData = await mRes.json();
+    const m = mData.machine || {};
+    const badge = document.getElementById('statusBadge');
+    badge.classList.toggle('off', !m.isOnline);
+    document.getElementById('statusText').textContent = m.isOnline 
+      ? `M-01 · Ready · Paper: ${m.paperRemaining || 100}`
+      : 'M-01 · Offline';
+  } catch (_) {}
+}
+
+function renderQueue(jobs) {
+  const q = document.getElementById('queueList');
+  document.getElementById('countBadge').textContent = `(${jobs.length} jobs)`;
+  
+  if (!jobs.length) {
+    q.innerHTML = '<div class="empty">Waiting for print jobs…</div>';
+    return;
+  }
+
+  q.innerHTML = jobs.slice(0, 6).map(j => {
+    const copies = (j.options && j.options.copies) || 1;
+    const amount = (j.pricing && j.pricing.totalPrice) || 0;
+    const fname = (j.file && (j.file.originalName || j.file.fileName)) || j.fileName || '-';
+    const rawFileName = (j.file && j.file.fileName) || j.fileName;
+    const isCompleted = j.status === 'completed' || printedJobs.has(j.jobCode);
+
+    // Auto-Print Trigger
+    if (!isCompleted && autoPrintEnabled && !printedJobs.has(j.jobCode)) {
+      setTimeout(() => triggerDevicePrint(j.jobCode, rawFileName), 800);
+    }
+
+    return `
+      <div class="job ${isCompleted ? 'done' : ''}">
+        <span class="code">${j.jobCode}</span>
+        <div class="job-info">
+          <b>${copies} copy · ₹${amount.toFixed(2)}</b>
+          <small>${fname}</small>
+        </div>
+        ${isCompleted 
+          ? '<span class="badge-done">✅ Ready</span>' 
+          : `<button class="print-action-btn" onclick="triggerDevicePrint('${j.jobCode}', '${rawFileName}')">
+              🖨️ Print Now
+             </button>`
+        }
+      </div>
+    `;
+  }).join('');
+}
+
+function updateStats(jobs) {
+  const today = new Date().toDateString();
+  document.getElementById('todayCount').textContent = jobs.filter(j => new Date(j.createdAt).toDateString() === today).length;
+  document.getElementById('waitingCount').textContent = jobs.filter(j => j.status !== 'completed' && !printedJobs.has(j.jobCode)).length;
+  document.getElementById('readyCount').textContent = jobs.filter(j => j.status === 'completed' || printedJobs.has(j.jobCode)).length;
+}
+
+function tickClock() {
+  const d = new Date();
+  document.getElementById('clock').textContent = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+}
+tickClock();
+setInterval(tickClock, 1000);
+
+document.getElementById('urlDisplay').textContent = location.host;
+loadJobs();
+setInterval(loadJobs, 4000);
+</script>
+
+</body>
+</html>
