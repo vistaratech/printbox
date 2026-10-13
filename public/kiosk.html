@@ -1037,8 +1037,9 @@ function renderJobItems(jobs) {
     const rawFile = (j.file && j.file.fileName) || j.fileName;
     const isDone = j.status === 'completed' || printedJobs.has(j.jobCode);
 
-    // Auto-Print Trigger (Test mode: triggers for all active jobs immediately)
-    if (!isDone && autoPrintActive && !printedJobs.has(j.jobCode) && !inFlightJobSet.has(j.jobCode)) {
+    // Auto-Print Trigger (only for paid/queued jobs — NOT pending_payment)
+    const isPrintReady = j.status === 'payment_received' || j.status === 'queued' || j.status === 'sending_to_machine';
+    if (!isDone && isPrintReady && autoPrintActive && !printedJobs.has(j.jobCode) && !inFlightJobSet.has(j.jobCode)) {
       inFlightJobSet.add(j.jobCode);
       setTimeout(() => sendToPrinter(j.jobCode, rawFile), 600);
     }
@@ -1058,7 +1059,7 @@ function renderJobItems(jobs) {
                 </svg>
                 Ready
                </span>` 
-            : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')">
+            : `<button class="print-trigger-btn" onclick="sendToPrinter('${j.jobCode}', '${rawFile}')" ${j.status === 'pending_payment' ? 'disabled style="opacity:0.4;cursor:not-allowed"' : ''}>
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
                   <path d="M6 9V3a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6"/>
