@@ -10,6 +10,7 @@
   <link
     href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&display=swap"
     rel="stylesheet">
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
   <style>
     @keyframes shimmer {
       0% {
@@ -1189,13 +1190,13 @@
       border: 1px solid rgba(25, 195, 240, 0.25);
     }
 
-    #s2 .card-badge {
-      background: rgba(255, 46, 147, 0.14);
-      color: var(--m);
-      border-color: rgba(255, 46, 147, 0.25);
+    #s1 .card-badge {
+      background: rgba(25, 195, 240, 0.14);
+      color: var(--c);
+      border-color: rgba(25, 195, 240, 0.25);
     }
 
-    #s3 .card-badge {
+    #s2 .card-badge {
       background: rgba(20, 184, 106, 0.14);
       color: var(--ok);
       border-color: rgba(20, 184, 106, 0.25);
@@ -1757,13 +1758,43 @@
       z-index: 1
     }
 
-    /* Hide top hero printer & badge when file is uploaded so document card fits completely */
-    #s1.has-file .card-badge,
-    #s1.has-file #hero {
+    /* When file is uploaded in Step 1, hide promo hero & benefits so document & settings fit cleanly */
+    #s1.has-file #hero,
+    #s1.has-file > h2,
+    #s1.has-file > p.sub,
+    #s1.has-file > .trust {
       display: none !important;
     }
-    #s1.has-file h2 {
-      margin-top: 4px;
+
+    .sec-divider {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin: 18px 0 12px;
+    }
+
+    .sec-divider::before,
+    .sec-divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--ln);
+    }
+
+    .sec-divider span {
+      font-size: 11.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--mu);
+      background: var(--soft);
+      padding: 3px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--bd);
+    }
+
+    .settings-wrap {
+      animation: in .4s cubic-bezier(.2, .8, .2, 1) both;
     }
 
     /* Ultra-Modern File Uploaded Card (fcard) */
@@ -2487,190 +2518,299 @@
       box-shadow: 0 0 0 var(--bd)
     }
 
-    /* Price Summary Table */
-    .kv {
-      display: flex;
-      justify-content: space-between;
-      padding: 10px 0;
-      border-top: 1px solid var(--ln)
+    /* ── Ultra-Modern Print Ticket (Boarding Pass Style) ── */
+    .ticket-card {
+      position: relative;
+      background: var(--pn);
+      border: 2px solid var(--bd);
+      border-radius: 20px;
+      padding: 16px 16px 14px;
+      margin-bottom: 12px;
+      box-shadow: 4px 4px 0 var(--sh);
+      overflow: hidden;
+      transition: all .2s ease;
+      animation: pop .35s cubic-bezier(.2, .9, .2, 1) both;
     }
 
-    .kv:first-child {
-      border-top: 0
+    :root[data-theme="dark"] .ticket-card {
+      background: rgba(27, 22, 51, 0.85);
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
     }
 
-    .kv span:first-child {
-      color: var(--mu)
-    }
-
-    .kv b {
-      text-align: right
-    }
-
-    .kv.tot {
-      font-size: 20px;
-      font-weight: 800
-    }
-
-    .kv.tot span:first-child {
-      color: var(--tx)
-    }
-
-    .estimate {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 2px 0 12px
-    }
-
-    .estimate div {
-      background: var(--bg);
-      border: 1.5px solid var(--ln);
-      border-radius: 12px;
-      padding: 9px 10px
-    }
-
-    .estimate small {
-      display: block;
-      color: var(--mu);
-      font-size: 11px
-    }
-
-    .estimate b {
-      font-size: 15px
-    }
-
-    /* Payment Methods & UPI QR Simulation */
-    .pay {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      padding: 12px 0
-    }
-
-    .pay-title {
+    .ticket-file-row {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding-top: 12px;
-      font-weight: 800
+      gap: 12px;
+      margin-bottom: 12px;
     }
 
-    .pay-title small {
-      color: var(--mu);
-      font-weight: 700
-    }
-
-    .pay button {
+    .ticket-file-ico {
+      width: 44px;
+      height: 44px;
+      border-radius: 13px;
+      background: linear-gradient(135deg, var(--c), var(--m));
+      color: #fff;
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      padding: 12px 14px;
-      border-radius: 12px;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 11px;
+      letter-spacing: .5px;
+      flex: none;
       border: 2px solid var(--bd);
       box-shadow: 2px 2px 0 var(--bd);
-      font-weight: 800;
-      transition: transform .15s, box-shadow .15s, border-color .15s;
-      text-align: left
     }
 
-    .pay button small {
+    .ticket-file-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .ticket-file-name {
+      font-weight: 800;
+      font-size: 14.5px;
+      color: var(--tx);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       display: block;
-      font-size: 11px;
-      color: inherit;
-      opacity: .72;
-      font-weight: 700;
-      margin-top: 1px
+      line-height: 1.25;
     }
 
-    .pay button:not(:disabled):hover {
-      transform: translate(-1px, -1px);
-      box-shadow: 3px 3px 0 var(--bd)
-    }
-
-    .pay button:not(:disabled):active {
-      transform: translate(2px, 2px);
-      box-shadow: 0 0 0 var(--bd)
-    }
-
-    .pay button.on {
-      border-color: var(--bd);
-      background: var(--y);
-      color: #16112b
-    }
-
-    .pay button[data-p="gpay"].on {
-      background: #e8f0fe;
-      border-color: #1a73e8;
-      color: #1a73e8
-    }
-
-    .pay button[data-p="phonepe"].on {
-      background: #f3e8fd;
-      border-color: #5f259f;
-      color: #5f259f
-    }
-
-    .pay button[data-p="paytm"].on {
-      background: #e0f7fa;
-      border-color: #00b9f1;
-      color: #002e6e
-    }
-
-    .pay button[data-p="upi"].on {
-      background: #fff3e0;
-      border-color: #ff6d00;
-      color: #e65100
-    }
-
-    .pay button:disabled {
-      opacity: .4;
-      cursor: not-allowed
-    }
-
-    .qr-box {
-      margin-top: 10px;
-      padding: 14px;
-      border: 2px dashed var(--bd);
-      border-radius: 16px;
-      background: var(--bg);
-      text-align: center;
-      box-shadow: 3px 3px 0 var(--bd)
-    }
-
-    .qr-head {
+    .ticket-file-meta {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      font-size: 13px;
-      font-weight: 800;
-      margin-bottom: 10px
+      gap: 6px;
+      margin-top: 3px;
+      font-size: 11.5px;
+      color: var(--mu);
+      font-weight: 600;
     }
 
-    .qr-badge {
-      background: var(--ok);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 8px;
+    .ticket-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .t-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3.5px 9px;
       border-radius: 12px;
-      letter-spacing: .5px
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      font-size: 11.5px;
+      font-weight: 800;
+      color: var(--tx);
+      box-shadow: 1.5px 1.5px 0 var(--bd);
     }
 
-    .qr-wrap {
+    .t-chip.highlight {
+      background: rgba(255, 46, 147, 0.1);
+      border-color: var(--m);
+      color: var(--m);
+    }
+
+    .t-chip.accent {
+      background: rgba(25, 195, 240, 0.12);
+      border-color: var(--c);
+      color: var(--c);
+    }
+
+    .t-chip.green {
+      background: rgba(20, 184, 106, 0.12);
+      border-color: var(--ok);
+      color: var(--ok);
+    }
+
+    .t-chip.yellow {
+      background: rgba(255, 214, 10, 0.2);
+      border-color: #d4a000;
+      color: #7a5800;
+    }
+
+    :root[data-theme="dark"] .t-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: none;
+    }
+
+    /* Perforated ticket tear line with punched notches */
+    .ticket-tear {
+      position: relative;
+      margin: 10px -16px 12px;
+      display: flex;
+      align-items: center;
+    }
+
+    .ticket-tear::before,
+    .ticket-tear::after {
+      content: '';
+      position: absolute;
+      width: 14px;
+      height: 22px;
+      background: var(--bg);
+      border: 2px solid var(--bd);
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 2;
+    }
+
+    .ticket-tear::before {
+      left: -2px;
+      border-left: none;
+      border-radius: 0 14px 14px 0;
+    }
+
+    .ticket-tear::after {
+      right: -2px;
+      border-right: none;
+      border-radius: 14px 0 0 14px;
+    }
+
+    .ticket-tear-line {
+      width: 100%;
+      height: 1px;
+      border-top: 2px dashed rgba(22, 17, 43, 0.25);
+    }
+
+    :root[data-theme="dark"] .ticket-tear::before,
+    :root[data-theme="dark"] .ticket-tear::after {
+      background: #141024;
+      border-color: rgba(255, 255, 255, 0.18);
+    }
+
+    :root[data-theme="dark"] .ticket-tear-line {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Ticket price breakdown & grand total */
+    .ticket-price-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .ticket-price-detail {
+      font-size: 12px;
+      color: var(--mu);
+      font-weight: 600;
+    }
+
+    .ticket-price-detail b {
+      color: var(--tx);
+      font-weight: 800;
+    }
+
+    .ticket-total-badge {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 5px;
+      background: var(--y);
+      color: #16112b;
+      padding: 4px 14px;
+      border-radius: 14px;
+      border: 2px solid var(--bd);
+      box-shadow: 2px 2px 0 var(--bd);
+      font-size: 19px;
+      font-weight: 800;
+      transform: rotate(-1deg);
+      transition: transform .2s ease;
+    }
+
+    .ticket-total-badge:hover {
+      transform: rotate(0deg) scale(1.05);
+    }
+
+    .ticket-total-badge small {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      opacity: .85;
+    }
+
+    /* ── Streamlined Payment Card ── */
+    .pay-card {
+      background: var(--pn);
+      border: 2px solid var(--bd);
+      border-radius: 20px;
+      padding: 14px 14px 12px;
+      margin-bottom: 12px;
+      box-shadow: 4px 4px 0 var(--sh);
+      text-align: center;
+    }
+
+    :root[data-theme="dark"] .pay-card {
+      background: rgba(27, 22, 51, 0.85);
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .pay-switch {
+      display: flex;
+      background: var(--bg);
+      border: 1.5px solid var(--bd);
+      border-radius: 14px;
+      padding: 3px;
+      margin-bottom: 10px;
+      gap: 4px;
+    }
+
+    :root[data-theme="dark"] .pay-switch {
+      background: rgba(0, 0, 0, 0.3);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+
+    .pay-switch button {
+      flex: 1;
+      padding: 7px 10px;
+      border: none;
+      background: transparent;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--mu);
+      cursor: pointer;
+      transition: all .2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+
+    .pay-switch button.active {
+      background: var(--m);
+      color: #fff;
+      box-shadow: 0 2px 8px rgba(255, 46, 147, 0.35);
+    }
+
+    /* Instant QR View */
+    .pay-qr-view {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      animation: in .3s cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    .qr-hero-wrap {
       position: relative;
       display: inline-block;
       padding: 8px;
       background: #fff;
       border: 2px solid var(--bd);
-      border-radius: 12px;
+      border-radius: 16px;
       box-shadow: 3px 3px 0 var(--bd);
-      overflow: hidden
+      overflow: hidden;
+      margin: 4px 0 8px;
     }
 
-    .qr-laser {
+    .qr-hero-wrap .qr-laser {
       position: absolute;
       left: 0;
       right: 0;
@@ -2678,24 +2818,98 @@
       background: linear-gradient(90deg, transparent, var(--m), var(--c), transparent);
       box-shadow: 0 0 12px 3px var(--m);
       animation: scan-sweep 1.8s ease-in-out infinite;
-      pointer-events: none
+      pointer-events: none;
     }
 
-    .qr-sub {
-      font-size: 12.5px;
+    .qr-app-logos {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-top: 4px;
+      font-size: 11px;
+      font-weight: 700;
       color: var(--mu);
-      margin-top: 8px
     }
 
-    .qr-sub b {
-      color: var(--tx)
+    .qr-app-logos span {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .note {
-      font-size: 12.5px;
-      color: var(--mu);
-      padding-top: 10px;
-      padding-bottom: 6px
+    /* UPI Apps 2x2 Grid View */
+    .pay-apps-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin: 4px 0 10px;
+      animation: in .3s cubic-bezier(.2, .9, .2, 1) both;
+    }
+
+    .pay-app-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 2px solid var(--bd);
+      background: var(--bg);
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 13px;
+      color: var(--tx);
+      box-shadow: 2px 2px 0 var(--bd);
+      transition: all .15s ease;
+      text-align: left;
+    }
+
+    .pay-app-btn:hover {
+      transform: translate(-1px, -1px);
+      box-shadow: 3px 3px 0 var(--bd);
+    }
+
+    .pay-app-btn.selected {
+      border-color: var(--m);
+      background: rgba(255, 46, 147, 0.08);
+      box-shadow: 0 0 0 2px var(--m), 2px 2px 0 var(--bd);
+    }
+
+    :root[data-theme="dark"] .pay-app-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.14);
+      box-shadow: none;
+    }
+
+    .pay-app-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 9px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 900;
+      flex: none;
+      border: 1.5px solid var(--bd);
+    }
+
+    .pay-app-icon.gpay { background: #e8f0fe; color: #1a73e8; }
+    .pay-app-icon.phonepe { background: #f3e8fd; color: #5f259f; }
+    .pay-app-icon.paytm { background: #e0f7fa; color: #00b9f1; }
+    .pay-app-icon.upi { background: #fff3e0; color: #e65100; }
+
+    .pay-guarantee {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ok);
+      background: rgba(20, 184, 106, 0.08);
+      padding: 4px 10px;
+      border-radius: 20px;
+      margin-top: 6px;
     }
 
     .security {
@@ -3257,26 +3471,6 @@
       animation: in .55s cubic-bezier(.2, .8, .2, 1) both
     }
 
-    #s2>:nth-child(3) {
-      animation-delay: .06s
-    }
-
-    #s2>:nth-child(4) {
-      animation-delay: .12s
-    }
-
-    #s2>:nth-child(5) {
-      animation-delay: .18s
-    }
-
-    #s2>:nth-child(6) {
-      animation-delay: .24s
-    }
-
-    #s2>:nth-child(7) {
-      animation-delay: .3s
-    }
-
     #done:not(.hide) {
       animation: pop .55s cubic-bezier(.3, 1.6, .5, 1)
     }
@@ -3360,22 +3554,18 @@
       <nav class="slider-nav" id="sliderNav" aria-label="Step Navigation">
         <button class="slider-tab on" type="button" data-slide="0">
           <span class="tab-bar"></span>
-          <span class="tab-label">1. Upload</span>
+          <span class="tab-label">1. Upload &amp; Settings</span>
         </button>
         <button class="slider-tab" type="button" data-slide="1">
           <span class="tab-bar"></span>
-          <span class="tab-label">2. Settings</span>
-        </button>
-        <button class="slider-tab" type="button" data-slide="2">
-          <span class="tab-bar"></span>
-          <span class="tab-label">3. Pay &amp; Print</span>
+          <span class="tab-label">2. Pay &amp; Print</span>
         </button>
       </nav>
 
       <div class="slider-track" id="sliderTrack">
-        <!-- Slide 1: Upload Document -->
+        <!-- Slide 1: Upload Document & Settings -->
         <article class="slide-card" id="s1" data-slide="0">
-          <div class="card-badge"><span class="sec-tag-dot"></span>1. Choose Document</div>
+          <div class="card-badge"><span class="sec-tag-dot"></span>1. Document &amp; Settings</div>
           <div class="hero" id="hero"></div>
           <h2>Print it. Grab it. Go.</h2>
           <p class="sub">No queue, no login. Upload from your phone and collect it at the machine.</p>
@@ -3443,101 +3633,102 @@
                   <button class="btn sm ghost fcard-edit-btn" id="ed" type="button">Edit Pages</button>
                 </div>
               </div>
-              <button class="btn sm fcard-next-btn" id="s1Next" type="button">Next: Customize Settings →</button>
             </div>
           </div>
-        </article>
 
-        <!-- Slide 2: Print Settings -->
-        <article class="slide-card" id="s2" data-slide="1">
-          <div class="card-badge"><span class="sec-tag-dot"></span>2. Print Settings</div>
-          <h2>Tweak it</h2>
-          <p class="sub">Grab a preset or fine-tune. Price updates live.</p>
-          <div class="pre" id="pre"><button data-p="a"><i class="ico sm attach"></i> Assignment</button><button
-              data-p="n"><i class="ico sm smart"></i> Notes</button><button data-p="s"><i class="ico sm fast"></i>
-              Slides</button><button data-p="p"><i class="ico sm idea"></i> Photo</button></div>
-          <div class="proof">
-            <div class="sheet bw" id="sheet">
-              <div class="pg" id="pg"></div>
+          <!-- Print Settings directly inside Step 1 -->
+          <div class="settings-wrap" id="settingsWrap">
+            <div class="sec-divider">
+              <span>Print Customization</span>
             </div>
-            <p><b id="pv1"></b><span id="pv2"></span></p>
-          </div>
-          <div class="insight" id="insight"><span class="badge"><i class="ico idea"></i></span>
-            <div><b>Smart recommendation</b><small>Upload a file to see print tips.</small></div>
-          </div>
-          <div class="panel">
-            <div class="row"><span class="l">Colour</span>
-              <div class="seg col" data-k="color"><button data-v="bw" class="on">Black &amp; white</button><button
-                  data-v="color">Colour</button></div>
-            </div>
-            <div class="row"><span class="l">Sides</span>
-              <div class="seg" data-k="sides"><button data-v="single" class="on">Single</button><button
-                  data-v="double">Double</button></div>
-            </div>
-            <div class="row"><span class="l">Copies</span>
-              <div class="step"><button data-cp="-1">−</button><input type="number" id="cp" min="1" max="99"
-                  value="1"><button data-cp="1">+</button></div>
-            </div>
-            <div class="row" style="display:block">
-              <div style="display:flex;justify-content:space-between;align-items:center"><span class="l">Pages</span>
-                <div class="seg" data-k="range"><button data-v="all" class="on">All</button><button
-                    data-v="custom">Custom</button></div>
+            <div class="pre" id="pre"><button data-p="a"><i class="ico sm attach"></i> Assignment</button><button
+                data-p="n"><i class="ico sm smart"></i> Notes</button><button data-p="s"><i class="ico sm fast"></i>
+                Slides</button><button data-p="p"><i class="ico sm idea"></i> Photo</button></div>
+            <div class="proof">
+              <div class="sheet bw" id="sheet">
+                <div class="pg" id="pg"></div>
               </div>
-              <input class="rng hide" id="rt" placeholder="e.g. 1-5, 8, 11-13" inputmode="text" aria-label="Page range">
+              <p><b id="pv1"></b><span id="pv2"></span></p>
             </div>
-          </div>
-          <div class="panel">
-            <div class="row"><span class="l">Paper size</span>
-              <div class="seg" data-k="size"><button data-v="A5">A5</button><button data-v="A4"
-                  class="on">A4</button><button data-v="A3">A3</button><button data-v="Legal">Legal</button></div>
+            <div class="insight" id="insight"><span class="badge"><i class="ico idea"></i></span>
+              <div><b>Smart recommendation</b><small>Upload a file to see print tips.</small></div>
             </div>
-            <div class="row"><span class="l">Orientation</span>
-              <div class="seg" data-k="orient"><button data-v="portrait" class="on">Portrait</button><button
-                  data-v="landscape">Landscape</button></div>
+            <div class="panel">
+              <div class="row"><span class="l">Colour</span>
+                <div class="seg col" data-k="color"><button data-v="bw" class="on">Black &amp; white</button><button
+                    data-v="color">Colour</button></div>
+              </div>
+              <div class="row"><span class="l">Sides</span>
+                <div class="seg" data-k="sides"><button data-v="single" class="on">Single</button><button
+                    data-v="double">Double</button></div>
+              </div>
+              <div class="row"><span class="l">Copies</span>
+                <div class="step"><button data-cp="-1">−</button><input type="number" id="cp" min="1" max="99"
+                    value="1"><button data-cp="1">+</button></div>
+              </div>
+              <div class="row" style="display:block">
+                <div style="display:flex;justify-content:space-between;align-items:center"><span class="l">Pages</span>
+                  <div class="seg" data-k="range"><button data-v="all" class="on">All</button><button
+                      data-v="custom">Custom</button></div>
+                </div>
+                <input class="rng hide" id="rt" placeholder="e.g. 1-5, 8, 11-13" inputmode="text" aria-label="Page range">
+              </div>
             </div>
-            <div class="row"><span class="l">Pages per sheet<small>Saves paper for slides and notes</small></span>
-              <div class="seg" data-k="pps"><button data-v="1" class="on">1</button><button data-v="2">2</button><button
-                  data-v="4">4</button><button data-v="6">6</button></div>
+            <div class="panel">
+              <div class="row"><span class="l">Paper size</span>
+                <div class="seg" data-k="size"><button data-v="A5">A5</button><button data-v="A4"
+                    class="on">A4</button><button data-v="A3">A3</button><button data-v="Legal">Legal</button></div>
+              </div>
+              <div class="row"><span class="l">Orientation</span>
+                <div class="seg" data-k="orient"><button data-v="portrait" class="on">Portrait</button><button
+                    data-v="landscape">Landscape</button></div>
+              </div>
+              <div class="row"><span class="l">Pages per sheet<small>Saves paper for slides and notes</small></span>
+                <div class="seg" data-k="pps"><button data-v="1" class="on">1</button><button data-v="2">2</button><button
+                    data-v="4">4</button><button data-v="6">6</button></div>
+              </div>
+              <div class="row"><span class="l">Quality</span>
+                <div class="seg" data-k="quality"><button data-v="draft">Draft</button><button data-v="normal"
+                    class="on">Normal</button><button data-v="high">High</button></div>
+              </div>
             </div>
-            <div class="row"><span class="l">Quality</span>
-              <div class="seg" data-k="quality"><button data-v="draft">Draft</button><button data-v="normal"
-                  class="on">Normal</button><button data-v="high">High</button></div>
+            <div class="panel">
+              <div class="row"><span class="l">Staple<small>+ ₹2 per copy</small></span><button class="sw" data-t="staple"
+                  role="switch" aria-checked="false" aria-label="Staple"></button></div>
+              <div class="row"><span class="l">Collate copies<small>Print full sets one after another</small></span><button
+                  class="sw on" data-t="collate" role="switch" aria-checked="true" aria-label="Collate"></button></div>
             </div>
-          </div>
-          <div class="panel">
-            <div class="row"><span class="l">Staple<small>+ ₹2 per copy</small></span><button class="sw" data-t="staple"
-                role="switch" aria-checked="false" aria-label="Staple"></button></div>
-            <div class="row"><span class="l">Collate copies<small>Print full sets one after another</small></span><button
-                class="sw on" data-t="collate" role="switch" aria-checked="true" aria-label="Collate"></button></div>
-          </div>
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn sm ghost" id="s2Prev" type="button" style="flex:1">← Upload</button>
-            <button class="btn sm" id="s2Next" type="button" style="flex:1">Review &amp; Pay →</button>
+            <button class="btn fcard-next-btn" id="s1Next" type="button" style="width:100%;margin-top:14px">Proceed to Pay &amp; Print →</button>
           </div>
         </article>
 
-        <!-- Slide 3: Summary & Payment -->
-        <article class="slide-card" id="s3" data-slide="2">
-          <div class="card-badge"><span class="sec-tag-dot"></span>3. Summary &amp; Payment</div>
-          <h2>Pay and print</h2>
-          <p class="sub">Check the details. Printing starts right after you pay.</p>
-          <div class="panel" id="sum"></div>
-          <div class="panel">
-            <div class="pay-title"><span>Pay with</span><small id="eta">Ready soon</small></div>
-            <div class="pay" id="pay"><button data-p="gpay" class="on"><span>Google Pay<small>UPI
-                    app</small></span>GPay</button><button data-p="phonepe"><span>PhonePe<small>UPI
-                    app</small></span>Pe</button><button data-p="paytm"><span>Paytm<small>UPI
-                    app</small></span>Pay</button><button data-p="upi"><span>Other UPI ID<small>Any bank
-                    app</small></span>UPI</button>
-              <button disabled><span>Card<small>Coming soon</small></span><i class="ico sm card"></i></button><button
-                disabled><span>Wallet<small>Coming soon</small></span><i class="ico sm wallet"></i></button>
+        <!-- Slide 2: Summary & Payment (Print Ticket Experience) -->
+        <article class="slide-card" id="s2" data-slide="1">
+          <div class="card-badge"><span class="sec-tag-dot"></span>2. Pay &amp; Print</div>
+          <h2>Review &amp; Pay</h2>
+          <p class="sub">Instant UPI payment. Your pages start printing immediately.</p>
+          
+          <!-- Dynamic Print Ticket Card rendered via JS -->
+          <div id="sum"></div>
+
+          <!-- Streamlined Payment Card with Instant QR & UPI Switcher -->
+          <div class="pay-card" id="payCard">
+            <div class="pay-switch" id="paySwitch" role="tablist">
+              <button type="button" class="active" id="tabQr" data-tab="qr">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                Instant UPI QR
+              </button>
+              <button type="button" id="tabApps" data-tab="apps">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                UPI Apps
+              </button>
             </div>
-            <div class="qr-box" id="qrbox">
-              <div class="qr-head"><span><i class="ico sm phone"></i> Instant UPI QR Code</span><span
-                  class="qr-badge">UPI</span></div>
-              <div class="qr-wrap">
+
+            <!-- View 1: Instant UPI QR Code -->
+            <div class="pay-qr-view" id="payQrView">
+              <div class="qr-hero-wrap">
                 <div class="qr-laser"></div>
-                <svg class="qr-svg" viewBox="0 0 100 100" width="120" height="120">
+                <svg class="qr-svg" viewBox="0 0 100 100" width="124" height="124">
                   <rect width="100" height="100" fill="#fff" rx="6" />
                   <rect x="8" y="8" width="26" height="26" rx="3" fill="#16112b" />
                   <rect x="13" y="13" width="16" height="16" fill="#fff" />
@@ -3569,20 +3760,54 @@
                   <rect x="74" y="86" width="12" height="6" fill="#16112b" />
                 </svg>
               </div>
-              <p class="qr-sub">Scan with any UPI app to pay <b id="qrpayamt">₹0.00</b></p>
+              <p class="qr-sub" style="margin:2px 0 6px">Scan with any UPI app to pay <b id="qrpayamt">₹0.00</b></p>
+              <div class="qr-app-logos">
+                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#1a73e8"><circle cx="12" cy="12" r="10"/></svg> Google Pay</span>
+                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#5f259f"><circle cx="12" cy="12" r="10"/></svg> PhonePe</span>
+                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#00b9f1"><circle cx="12" cy="12" r="10"/></svg> Paytm</span>
+              </div>
             </div>
-            <div class="security"><span><i class="ico shield"></i></span>
-              <div><b>Secure payment</b><small>Payment is verified before printing starts. In production this screen
-                  connects to a verified UPI payment gateway.</small></div>
+
+            <!-- View 2: Direct UPI Apps Grid -->
+            <div class="pay-apps-view hide" id="payAppsView">
+              <button type="button" class="pay-app-btn selected" data-p="gpay">
+                <span class="pay-app-icon gpay">G</span>
+                <div>
+                  <div style="font-weight:800;font-size:12.5px">Google Pay</div>
+                  <small style="color:var(--mu);font-size:10.5px">UPI Direct</small>
+                </div>
+              </button>
+              <button type="button" class="pay-app-btn" data-p="phonepe">
+                <span class="pay-app-icon phonepe">Pe</span>
+                <div>
+                  <div style="font-weight:800;font-size:12.5px">PhonePe</div>
+                  <small style="color:var(--mu);font-size:10.5px">Instant UPI</small>
+                </div>
+              </button>
+              <button type="button" class="pay-app-btn" data-p="paytm">
+                <span class="pay-app-icon paytm">Pay</span>
+                <div>
+                  <div style="font-weight:800;font-size:12.5px">Paytm</div>
+                  <small style="color:var(--mu);font-size:10.5px">UPI / Wallet</small>
+                </div>
+              </button>
+              <button type="button" class="pay-app-btn" data-p="upi">
+                <span class="pay-app-icon upi">UPI</span>
+                <div>
+                  <div style="font-weight:800;font-size:12.5px">Any UPI</div>
+                  <small style="color:var(--mu);font-size:10.5px">BHIM / Bank</small>
+                </div>
+              </button>
             </div>
-            <p class="note">Payment is required before printing starts.</p>
+
+            <div class="pay-guarantee">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              <span>Instant Verification · Machine M-01</span>
+            </div>
           </div>
-          <div style="display:flex;gap:10px;margin-top:14px">
-            <button class="btn sm ghost" id="s3Prev" type="button" style="width:100%">← Back to Print Settings</button>
-          </div>
-          <div style="text-align:center;margin-top:14px;font-size:11.5px;color:var(--mu);display:flex;gap:12px;justify-content:center">
-            <a href="/admin" style="color:inherit;text-decoration:none;font-weight:700">Admin Dashboard</a> · 
-            <a href="/kiosk" style="color:inherit;text-decoration:none;font-weight:700">Kiosk Screen</a>
+
+          <div style="display:flex;gap:10px;margin-top:12px">
+            <button class="btn sm ghost" id="s2Prev" type="button" style="width:100%">← Edit Document &amp; Settings</button>
           </div>
         </article>
       </div>
@@ -3887,12 +4112,52 @@
       $('#rt').classList.toggle('hide', S.range !== 'custom');
       if ($('#qrpayamt')) $('#qrpayamt').textContent = money(c.total);
       if ($('#eta')) $('#eta').textContent = 'Estimated ' + eta(c);
-      $('#sum').innerHTML = '<div class="estimate"><div><small>Ready in</small><b>' + eta(c) + '</b></div><div><small>Sheets used</small><b>' + c.paper + '</b></div></div>' + [['File', (S.file ? S.file.name : '-') + (S.pl || S.img ? ' (edited)' : '')], ['Pages', c.n + ' × ' + S.copies + ' cop' + (S.copies > 1 ? 'ies' : 'y')], ['Print', (S.color === 'bw' ? 'B&W' : 'Colour') + ' · ' + (S.sides === 'double' ? 'Double' : 'Single') + ' · ' + S.size + ' · ' + S.orient], ['Layout', S.pps + ' per sheet · ' + S.quality + (S.staple ? ' · stapled' : '')], ['Paper used', c.paper + ' sheet' + (c.paper > 1 ? 's' : '')], ['Printing', money(c.pr)], ['Staple', money(c.st)]].map(r => '<div class="kv"><span>' + r[0] + '</span><b>' + r[1].replace(/</g, '&lt;') + '</b></div>').join('') + '<div class="kv tot"><span>Total</span><b>' + money(c.total) + '</b></div>';
+      const ext = S.file ? S.file.name.split('.').pop().toUpperCase() : 'PDF';
+      const fileName = S.file ? S.file.name : 'Document.pdf';
+      const fileBadge = S.pl || S.img ? ' (edited)' : '';
+      const chips = [
+        '<span class="t-chip highlight">' + (S.color === 'bw' ? '⚫ B&W' : '🌈 Colour') + '</span>',
+        '<span class="t-chip accent">' + (S.sides === 'double' ? '📄 2-Sided' : '📄 1-Sided') + '</span>',
+        '<span class="t-chip">' + S.size + '</span>',
+        '<span class="t-chip">' + (S.orient === 'portrait' ? 'Portrait' : 'Landscape') + '</span>',
+        '<span class="t-chip">' + c.n + ' pg' + (c.n > 1 ? 's' : '') + ' × ' + S.copies + ' cop' + (S.copies > 1 ? 'ies' : 'y') + '</span>',
+        '<span class="t-chip green">⚡ ' + eta(c) + '</span>',
+        '<span class="t-chip">📑 ' + c.paper + ' sheet' + (c.paper > 1 ? 's' : '') + '</span>'
+      ].join('');
+
+      $('#sum').innerHTML = `
+        <div class="ticket-card">
+          <div class="ticket-file-row">
+            <div class="ticket-file-ico">${ext}</div>
+            <div class="ticket-file-info">
+              <span class="ticket-file-name" title="${fileName}">${fileName}${fileBadge}</span>
+              <div class="ticket-file-meta">
+                <span>${c.n} pages</span> · <span>${c.paper} sheets</span> · <span style="color:var(--ok);font-weight:700">Verified</span>
+              </div>
+            </div>
+          </div>
+          <div class="ticket-chips">
+            ${chips}
+          </div>
+          <div class="ticket-tear">
+            <div class="ticket-tear-line"></div>
+          </div>
+          <div class="ticket-price-row">
+            <div class="ticket-price-detail">
+              <span>Print (${c.n} pgs × ${S.copies}): <b>${money(c.pr)}</b></span>
+              ${S.staple ? ' · <span>Staple: <b>' + money(c.st) + '</b></span>' : ''}
+            </div>
+            <div class="ticket-total-badge">
+              <small>Total</small> ${money(c.total)}
+            </div>
+          </div>
+        </div>
+      `;
     }
 
     // ── Horizontal Slider State & Navigation ──
     let currentSlide = 0;
-    const slides = [$('#s1'), $('#s2'), $('#s3')];
+    const slides = [$('#s1'), $('#s2')];
     const track = $('#sliderTrack');
     const tabs = $$('#sliderNav .slider-tab');
 
@@ -3909,7 +4174,7 @@
           bk.classList.add('hide');
         } else {
           bk.classList.remove('hide');
-          bk.textContent = idx === 1 ? '← Upload' : '← Settings';
+          bk.textContent = '← Document & Settings';
         }
       }
 
@@ -3923,15 +4188,11 @@
             nx.disabled = false;
             if (bl) bl.textContent = 'Estimated total';
           } else {
-            nx.textContent = 'Settings →';
+            nx.textContent = 'Review & Pay →';
             nx.disabled = false;
             if (bl) bl.textContent = 'Estimated total';
           }
         } else if (idx === 1) {
-          nx.textContent = 'Review & Pay →';
-          nx.disabled = c.n < 1;
-          if (bl) bl.textContent = 'Estimated total';
-        } else if (idx === 2) {
           nx.textContent = 'Pay & Print ' + money(c.total);
           nx.disabled = c.n < 1;
           if (bl) bl.textContent = 'You pay';
@@ -3941,7 +4202,7 @@
 
     function scrollToSlide(idx) {
       if (idx < 0) idx = 0;
-      if (idx > 2) idx = 2;
+      if (idx > 1) idx = 1;
       const target = slides[idx];
       if (target && track) {
         track.scrollTo({ left: target.offsetLeft, behavior: 'smooth' });
@@ -3958,7 +4219,7 @@
           const scrollLeft = track.scrollLeft;
           const cardWidth = track.clientWidth || 1;
           const activeIdx = Math.round(scrollLeft / cardWidth);
-          if (activeIdx >= 0 && activeIdx <= 2 && activeIdx !== currentSlide) {
+          if (activeIdx >= 0 && activeIdx <= 1 && activeIdx !== currentSlide) {
             updateSliderUI(activeIdx);
           }
         }, 50);
@@ -3969,6 +4230,12 @@
     tabs.forEach(tab => {
       tab.onclick = () => {
         const idx = +tab.dataset.slide;
+        if (idx === 1 && !S.file) {
+          const fi = $('#fi');
+          if (fi) fi.click();
+          toast('Please pick your document first', '📄');
+          return;
+        }
         scrollToSlide(idx);
         Snd.tap();
       };
@@ -3976,13 +4243,18 @@
 
     // In-card navigation buttons
     const s1Next = $('#s1Next');
-    if (s1Next) s1Next.onclick = () => { scrollToSlide(1); Snd.step(); };
+    if (s1Next) s1Next.onclick = () => {
+      if (!S.file) {
+        const fi = $('#fi');
+        if (fi) fi.click();
+        toast('Please pick your document to print', '📄');
+        return;
+      }
+      scrollToSlide(1);
+      Snd.step();
+    };
     const s2Prev = $('#s2Prev');
     if (s2Prev) s2Prev.onclick = () => { scrollToSlide(0); Snd.tap(); };
-    const s2Next = $('#s2Next');
-    if (s2Next) s2Next.onclick = () => { scrollToSlide(2); Snd.step(); };
-    const s3Prev = $('#s3Prev');
-    if (s3Prev) s3Prev.onclick = () => { scrollToSlide(1); Snd.tap(); };
 
     // Bottom floating bar buttons
     $('#bk').onclick = () => {
@@ -4002,9 +4274,6 @@
         scrollToSlide(1);
         Snd.step();
       } else if (currentSlide === 1) {
-        scrollToSlide(2);
-        Snd.step();
-      } else if (currentSlide === 2) {
         if (!S.file) {
           toast('Please upload a file first', '📄');
           scrollToSlide(0);
@@ -4097,11 +4366,30 @@
 
     $('#rt').oninput = e => { S.rt = e.target.value; upd() };
 
-    $('#pay').onclick = e => {
-      const b = e.target.closest('button'); if (!b || b.disabled) return;
-      $$('#pay button').forEach(x => x.classList.toggle('on', x === b));
-      S.pay = b.dataset.p; Snd.tap();
-    };
+    // Payment Switcher & UPI App selection
+    const paySwitch = $('#paySwitch');
+    if (paySwitch) {
+      paySwitch.onclick = e => {
+        const btn = e.target.closest('button');
+        if (!btn) return;
+        const tab = btn.dataset.tab;
+        $('#tabQr').classList.toggle('active', tab === 'qr');
+        $('#tabApps').classList.toggle('active', tab === 'apps');
+        $('#payQrView').classList.toggle('hide', tab !== 'qr');
+        $('#payAppsView').classList.toggle('hide', tab !== 'apps');
+        Snd.tap();
+      };
+    }
+
+    const payApps = $$('.pay-app-btn');
+    payApps.forEach(b => {
+      b.onclick = () => {
+        payApps.forEach(x => x.classList.toggle('selected', x === b));
+        S.pay = b.dataset.p;
+        Snd.tap();
+        toast('Selected ' + b.querySelector('div div').textContent, '<span class="ico sm fast"></span>');
+      };
+    });
 
     const updateThemeIcon = () => {
       const r = document.documentElement;
@@ -4146,8 +4434,13 @@
 
     const ST = ['File sent to the machine', 'Printing your pages', 'Ready in the tray'];
     let jobPollTimer = null;
-    async function run() {
-      go(4); $('#done').classList.add('hide'); $('#again').classList.add('hide'); Snd.pay();
+
+    function startPrintingUI(jObj) {
+      go(4);
+      $('#done').classList.add('hide');
+      $('#again').classList.add('hide');
+      Snd.pay();
+
       const draw = k => {
         const isAllDone = k >= 2;
         $('#stl').innerHTML = ST.map((t, i) => {
@@ -4162,21 +4455,66 @@
         $('#prn').setAttribute('class', 'prn' + (k === 1 ? ' on' : k >= 2 ? ' out' : ''));
         ctr(k);
       };
+
+      draw(0);
+
+      const handleJobState = (j) => {
+        if (!j) return;
+        if (j.status === 'failed') {
+          if (jobPollTimer) { clearInterval(jobPollTimer); jobPollTimer = null }
+          if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
+          $('#s4h').textContent = 'Printing Error';
+          $('#pcnt').textContent = j.statusMessage || 'Hardware error on printer. Please contact operator.';
+          $('#done').classList.remove('hide');
+          $('#done').textContent = 'Job stopped. Please check printer tray or paper.';
+          $('#done').style.color = '#ef4444';
+          $('#again').classList.remove('hide');
+          return;
+        }
+        const sm = { 'pending_payment': 0, 'payment_received': 0, 'sending_to_machine': 0, 'printing': 1, 'completed': 2 };
+        const sidx = sm[j.status] !== undefined ? sm[j.status] : 0;
+        draw(sidx);
+        if (j.status === 'printing') { $('#pcnt').textContent = (j.printedPages || 0) + ' of ' + (j.totalPhysicalPages || calc().paper) + ' pages' }
+        if (j.status === 'completed') {
+          if (jobPollTimer) { clearInterval(jobPollTimer); jobPollTimer = null }
+          if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
+          $('#done').classList.remove('hide');
+          $('#again').classList.remove('hide');
+          checkMachineStatus();
+        }
+      };
+
+      // 1. Live SSE Stream
+      const es = new EventSource(API_BASE + '/jobs/' + jObj.jobCode + '/stream');
+      currentEventSource = es;
+      es.onmessage = e => { try { handleJobState(JSON.parse(e.data)); } catch (x) { } };
+      es.onerror = () => {/* Keep polling fallback alive */ };
+
+      // 2. Resilient Polling Fallback
+      jobPollTimer = setInterval(async () => {
+        try {
+          const pr = await fetch(API_BASE + '/jobs/' + jObj.jobCode);
+          if (pr.ok) {
+            const pd = await pr.json();
+            if (pd && pd.job) handleJobState(pd.job);
+          }
+        } catch (_) { }
+      }, 2500);
+    }
+
+    async function run() {
       if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
       if (jobPollTimer) { clearInterval(jobPollTimer); jobPollTimer = null }
 
       try {
         if (!S.serverFile && S.file) {
-          toast('Uploading document to machine…', '⏳');
+          toast('Uploading document…', '⏳');
           const fd = new FormData(); fd.append('file', S.file);
           const upR = await fetch(API_BASE + '/upload', { method: 'POST', body: fd }).catch(() => null);
           if (upR && upR.ok) { const upD = await upR.json(); if (upD && upD.file) S.serverFile = upD.file }
         }
         if (!S.serverFile) {
           toast('Upload failed! Please check connection.', '<span class="ico sm plug"></span>');
-          $('#s4h').textContent = 'Upload Failed';
-          $('#pcnt').innerHTML = 'Cannot upload document to server.<br><br><button class="btn sm" onclick="go(1)">Choose File Again</button>';
-          $('#again').classList.remove('hide');
           return;
         }
 
@@ -4197,67 +4535,107 @@
           effectiveRangeText = '1-' + S.pages;
         }
 
-        const r = await fetch(API_BASE + '/jobs', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ file: fp, options: { color: S.color, sides: S.sides, size: S.size, orient: S.orient, pps: S.pps, quality: S.quality, copies: S.copies, range: effectiveRange, rangeText: effectiveRangeText, staple: S.staple, collate: S.collate, pageList: S.pl || undefined }, machineId: 'M-01', paymentMethod: S.pay }) });
+        toast('Preparing print job…', '🧾');
+        const r = await fetch(API_BASE + '/jobs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            file: fp,
+            options: {
+              color: S.color,
+              sides: S.sides,
+              size: S.size,
+              orient: S.orient,
+              pps: S.pps,
+              quality: S.quality,
+              copies: S.copies,
+              range: effectiveRange,
+              rangeText: effectiveRangeText,
+              staple: S.staple,
+              collate: S.collate,
+              pageList: S.pl || undefined
+            },
+            machineId: 'M-01',
+            paymentMethod: S.pay
+          })
+        });
 
-        if (r.ok) {
-          const d = await r.json(); currentJob = d.job; $('#jc').textContent = currentJob.jobCode;
-          draw(0); // Immediately reflect file sending state
+        if (!r.ok) {
+          toast('Failed to create print job!', '⚠️');
+          return;
+        }
 
-          await fetch(API_BASE + '/payments/verify', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ jobCode: currentJob.jobCode, autoSimulate: false }) });
+        const d = await r.json();
+        currentJob = d.job;
+        $('#jc').textContent = currentJob.jobCode;
 
-          const handleJobState = (j) => {
-            if (!j) return;
-            if (j.status === 'failed') {
-              if (jobPollTimer) { clearInterval(jobPollTimer); jobPollTimer = null }
-              if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
-              $('#s4h').textContent = 'Printing Error';
-              $('#pcnt').textContent = j.statusMessage || 'Hardware error on printer. Please contact operator.';
-              $('#done').classList.remove('hide');
-              $('#done').textContent = 'Job stopped. Please check printer tray or paper.';
-              $('#done').style.color = '#ef4444';
-              $('#again').classList.remove('hide');
-              return;
-            }
-            const sm = { 'pending_payment': 0, 'payment_received': 0, 'sending_to_machine': 0, 'printing': 1, 'completed': 2 };
-            const sidx = sm[j.status] !== undefined ? sm[j.status] : 0;
-            draw(sidx);
-            if (j.status === 'printing') { $('#pcnt').textContent = (j.printedPages || 0) + ' of ' + (j.totalPhysicalPages || calc().paper) + ' pages' }
-            if (j.status === 'completed') {
-              if (jobPollTimer) { clearInterval(jobPollTimer); jobPollTimer = null }
-              if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
-              $('#done').classList.remove('hide');
-              $('#again').classList.remove('hide');
-              checkMachineStatus();
+        // Create Razorpay payment order
+        const orderRes = await fetch(API_BASE + '/payments/create-order', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobCode: currentJob.jobCode })
+        });
+        const orderData = await orderRes.json();
+
+        // If Razorpay is active and available, trigger real UPI / Card checkout modal
+        if (orderData && orderData.keyId && orderData.razorpayOrderId && window.Razorpay) {
+          const rzpOptions = {
+            key: orderData.keyId,
+            amount: Math.round(currentJob.pricing.totalPrice * 100),
+            currency: 'INR',
+            name: 'PrintBox Vending',
+            description: `Print Job #${currentJob.jobCode}`,
+            order_id: orderData.razorpayOrderId,
+            handler: async function (response) {
+              toast('Payment verified! Printing…', '✅');
+              await fetch(API_BASE + '/payments/verify', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  jobCode: currentJob.jobCode,
+                  razorpayPaymentId: response.razorpay_payment_id,
+                  razorpayOrderId: response.razorpay_order_id,
+                  razorpaySignature: response.razorpay_signature,
+                  autoSimulate: false
+                })
+              }).catch(() => null);
+              startPrintingUI(currentJob);
+            },
+            prefill: {
+              name: 'PrintBox User',
+              email: 'customer@printbox.local',
+              contact: '9999999999'
+            },
+            theme: {
+              color: '#ff2e93'
+            },
+            modal: {
+              ondismiss: function () {
+                toast('Payment cancelled', '⚠️');
+              }
             }
           };
 
-          // 1. Live SSE Stream
-          const es = new EventSource(API_BASE + '/jobs/' + currentJob.jobCode + '/stream');
-          currentEventSource = es;
-          es.onmessage = e => { try { handleJobState(JSON.parse(e.data)); } catch (x) { } };
-          es.onerror = () => {/* Keep polling fallback alive */ };
-
-          // 2. Resilient Polling Fallback (ensures mobile browser updates even if SSE drops)
-          jobPollTimer = setInterval(async () => {
-            try {
-              const pr = await fetch(API_BASE + '/jobs/' + currentJob.jobCode);
-              if (pr.ok) {
-                const pd = await pr.json();
-                if (pd && pd.job) handleJobState(pd.job);
-              }
-            } catch (_) { }
-          }, 2500);
-
+          const rzp = new window.Razorpay(rzpOptions);
+          rzp.on('payment.failed', function (resp) {
+            toast('Payment failed: ' + (resp.error?.description || 'Please try again'), '❌');
+          });
+          rzp.open();
           return;
         }
-      } catch (x) { }
+
+        // Direct fallback / Demo payment
+        await fetch(API_BASE + '/payments/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ jobCode: currentJob.jobCode, autoSimulate: false })
+        });
+        startPrintingUI(currentJob);
+        return;
+      } catch (x) {
+        console.error('Run print error:', x);
+      }
       toast('Could not connect to PrintBox Backend Server!', '<span class="ico sm plug"></span>');
-      $('#s4h').textContent = 'Printer Offline';
-      $('#pcnt').textContent = 'Please make sure backend server is reachable';
-      $('#done').classList.remove('hide');
-      $('#done').textContent = 'Failed to connect to printer. Please check server.';
-      $('#done').style.color = '#ff2e93';
-      $('#again').classList.remove('hide');
     }
 
     $('#again').onclick = () => {
