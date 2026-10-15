@@ -4705,6 +4705,32 @@
         if (orderData && orderData.keyId && orderData.razorpayOrderId && window.Razorpay) {
           removeProcessing();
 
+          let paymentPollTimer = null;
+          let hasRedirected = false;
+
+          const redirectToPrinting = (jobData) => {
+            if (hasRedirected) return;
+            hasRedirected = true;
+            if (paymentPollTimer) { clearInterval(paymentPollTimer); paymentPollTimer = null; }
+            try { if (rzp && typeof rzp.close === 'function') rzp.close(); } catch (_) {}
+            removeProcessing();
+            toast('Payment verified! Printing…', '✅');
+            startPrintingUI(jobData || currentJob);
+          };
+
+          // Active background polling: auto-redirects instantly when paid (UPI Intent, QR scan, or Webhook)
+          paymentPollTimer = setInterval(async () => {
+            try {
+              const res = await fetch(API_BASE + '/jobs/' + currentJob.jobCode);
+              if (res.ok) {
+                const data = await res.json();
+                if (data && data.job && data.job.status !== 'pending_payment') {
+                  redirectToPrinting(data.job);
+                }
+              }
+            } catch (_) {}
+          }, 1200);
+
           const rzpOptions = {
             key: orderData.keyId,
             amount: Math.round(currentJob.pricing.totalPrice * 100),
@@ -4713,14 +4739,14 @@
             description: `Print Job #${currentJob.jobCode}`,
             order_id: orderData.razorpayOrderId,
             handler: async function (response) {
-              // Show success processing
+              // Show success processing overlay
               let successEl = document.createElement('div');
               successEl.className = 'pay-processing';
               successEl.id = 'payProcessing';
               successEl.innerHTML = '<div class="pay-processing-spinner"></div><div class="pay-processing-text">Payment received! ✅</div><div class="pay-processing-sub">Starting your print job…</div>';
               document.body.appendChild(successEl);
 
-              await fetch(API_BASE + '/payments/verify', {
+              fetch(API_BASE + '/payments/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -4730,14 +4756,11 @@
                   razorpaySignature: response.razorpay_signature,
                   autoSimulate: false
                 })
-              }).catch(() => null);
-
-              setTimeout(() => {
-                const el = $('#payProcessing');
-                if (el) el.remove();
-                toast('Payment verified! Printing…', '✅');
-                startPrintingUI(currentJob);
-              }, 800);
+              }).then(r => r.json()).then(data => {
+                redirectToPrinting(data.job || currentJob);
+              }).catch(() => {
+                redirectToPrinting(currentJob);
+              });
             },
             prefill: {
               method: 'upi'
@@ -4765,7 +4788,19 @@
               color: '#ff2e93'
             },
             modal: {
-              ondismiss: function () {
+              ondismiss: async function () {
+                // Check if payment was actually completed before dismissing (e.g. mobile UPI app return)
+                try {
+                  const res = await fetch(API_BASE + '/jobs/' + currentJob.jobCode);
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data && data.job && data.job.status !== 'pending_payment') {
+                      redirectToPrinting(data.job);
+                      return;
+                    }
+                  }
+                } catch (_) {}
+                if (paymentPollTimer) { clearInterval(paymentPollTimer); paymentPollTimer = null; }
                 removeProcessing();
                 toast('Payment cancelled — you can retry anytime', '⚠️');
               }
@@ -4774,6 +4809,7 @@
 
           const rzp = new window.Razorpay(rzpOptions);
           rzp.on('payment.failed', function (resp) {
+            if (paymentPollTimer) { clearInterval(paymentPollTimer); paymentPollTimer = null; }
             removeProcessing();
             const errMsg = resp.error?.description || 'Payment could not be completed. Please try again.';
             toast('Payment failed', '❌');
