@@ -27,10 +27,14 @@ router.post('/create-order', async (req, res) => {
     const merchantName = 'PrintBox Vending';
     const amount = job.pricing.totalPrice;
     const amountPaise = Math.max(100, Math.round(amount * 100)); // Minimum ₹1 (100 paise) for Razorpay
-    // Razorpay integration
-    const keyId = process.env.RAZORPAY_KEY_ID;
-    const keySecret = process.env.RAZORPAY_KEY_SECRET;
+    // Razorpay integration (skipped when demo payment mode is enabled)
+    const isDemoMode = process.env.ENABLE_DEMO_PAYMENT === 'true';
+    const keyId = isDemoMode ? null : process.env.RAZORPAY_KEY_ID;
+    const keySecret = isDemoMode ? null : process.env.RAZORPAY_KEY_SECRET;
     let razorpayOrderId = null;
+    if (isDemoMode) {
+        console.log(`🧪 Demo payment mode — skipping Razorpay for ${job.jobCode} (₹${amount})`);
+    }
     if (keyId && keySecret) {
         try {
             const auth = Buffer.from(`${keyId}:${keySecret}`).toString('base64');
