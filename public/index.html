@@ -4602,9 +4602,29 @@
               startPrintingUI(currentJob);
             },
             prefill: {
-              name: 'PrintBox User',
-              email: 'customer@printbox.local',
-              contact: '9999999999'
+              name: 'PrintBox Customer',
+              email: 'pay@printbox.in',
+              contact: '9840123456',
+              method: 'upi'
+            },
+            config: {
+              display: {
+                blocks: {
+                  upi: {
+                    name: 'Pay using UPI App',
+                    instruments: [
+                      {
+                        method: 'upi',
+                        flows: ['intent', 'qr']
+                      }
+                    ]
+                  }
+                },
+                sequence: ['block.upi'],
+                preferences: {
+                  show_default_blocks: false
+                }
+              }
             },
             theme: {
               color: '#ff2e93'
