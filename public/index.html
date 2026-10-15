@@ -3513,6 +3513,178 @@
         padding-right: 18px
       }
     }
+
+    /* ── Redesigned Payment Card ── */
+    .pay-hero {
+      text-align: center;
+      padding: 18px 10px 14px;
+    }
+
+    .pay-hero-label {
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--mu);
+      margin-bottom: 6px;
+    }
+
+    .pay-hero-amount {
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--tx);
+      line-height: 1.1;
+      letter-spacing: -1px;
+      transition: all .3s cubic-bezier(.3, 1.5, .5, 1);
+    }
+
+    .pay-hero-amount.pop {
+      animation: price-flash .4s cubic-bezier(.3, 1.5, .5, 1);
+    }
+
+    .pay-hero-amount small {
+      font-size: 20px;
+      font-weight: 700;
+      opacity: .6;
+      margin-left: 2px;
+    }
+
+    .pay-hero-eta {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ok);
+      margin-top: 6px;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .pay-methods-strip {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 0;
+      border-top: 1.5px dashed var(--bd);
+      border-bottom: 1.5px dashed var(--bd);
+      margin: 0 4px;
+    }
+
+    .pay-method-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--mu);
+      background: var(--bg);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1.5px solid var(--bd);
+    }
+
+    :root[data-theme="dark"] .pay-method-badge {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.12);
+    }
+
+    .pay-secured {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--ok);
+      padding: 10px 0 4px;
+    }
+
+    .pay-secured b {
+      color: var(--tx);
+      font-weight: 800;
+    }
+
+    /* Pay button loading state */
+    .btn.is-loading {
+      pointer-events: none;
+      opacity: .85;
+      position: relative;
+    }
+
+    .btn.is-loading::after {
+      content: '';
+      display: inline-block;
+      width: 14px;
+      height: 14px;
+      border: 2.5px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg) }
+    }
+
+    /* Payment processing overlay */
+    .pay-processing {
+      position: fixed;
+      inset: 0;
+      background: rgba(from var(--bg) r g b / .88);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      animation: in .3s ease both;
+    }
+
+    .pay-processing-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid var(--bd);
+      border-top-color: var(--m);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+
+    .pay-processing-text {
+      font-size: 16px;
+      font-weight: 800;
+      color: var(--tx);
+    }
+
+    .pay-processing-sub {
+      font-size: 13px;
+      color: var(--mu);
+      font-weight: 600;
+    }
+
+    /* Payment retry card */
+    .pay-retry-card {
+      text-align: center;
+      padding: 16px;
+      margin-top: 10px;
+      background: rgba(239, 68, 68, 0.06);
+      border: 2px solid rgba(239, 68, 68, 0.2);
+      border-radius: 16px;
+      animation: in .3s ease both;
+    }
+
+    .pay-retry-card p {
+      font-size: 13px;
+      color: var(--mu);
+      margin: 6px 0 12px;
+    }
+
+    .pay-retry-card .btn {
+      width: 100%;
+    }
   </style>
 </head>
 
@@ -3711,99 +3883,43 @@
           <!-- Dynamic Print Ticket Card rendered via JS -->
           <div id="sum"></div>
 
-          <!-- Streamlined Payment Card with Instant QR & UPI Switcher -->
+          <!-- Payment Summary Card -->
           <div class="pay-card" id="payCard">
-            <div class="pay-switch" id="paySwitch" role="tablist">
-              <button type="button" class="active" id="tabQr" data-tab="qr">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-                Instant UPI QR
-              </button>
-              <button type="button" id="tabApps" data-tab="apps">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-                UPI Apps
-              </button>
-            </div>
-
-            <!-- View 1: Instant UPI QR Code -->
-            <div class="pay-qr-view" id="payQrView">
-              <div class="qr-hero-wrap">
-                <div class="qr-laser"></div>
-                <svg class="qr-svg" viewBox="0 0 100 100" width="124" height="124">
-                  <rect width="100" height="100" fill="#fff" rx="6" />
-                  <rect x="8" y="8" width="26" height="26" rx="3" fill="#16112b" />
-                  <rect x="13" y="13" width="16" height="16" fill="#fff" />
-                  <rect x="17" y="17" width="8" height="8" fill="#16112b" />
-                  <rect x="66" y="8" width="26" height="26" rx="3" fill="#16112b" />
-                  <rect x="71" y="13" width="16" height="16" fill="#fff" />
-                  <rect x="75" y="17" width="8" height="8" fill="#16112b" />
-                  <rect x="8" y="66" width="26" height="26" rx="3" fill="#16112b" />
-                  <rect x="13" y="71" width="16" height="16" fill="#fff" />
-                  <rect x="17" y="75" width="8" height="8" fill="#16112b" />
-                  <rect x="38" y="10" width="6" height="6" fill="#ff2e93" />
-                  <rect x="48" y="10" width="6" height="6" fill="#16112b" />
-                  <rect x="38" y="20" width="6" height="6" fill="#19c3f0" />
-                  <rect x="52" y="24" width="6" height="6" fill="#16112b" />
-                  <rect x="12" y="38" width="6" height="6" fill="#16112b" />
-                  <rect x="22" y="44" width="6" height="6" fill="#16112b" />
-                  <rect x="12" y="52" width="6" height="6" fill="#16112b" />
-                  <rect x="42" y="42" width="16" height="16" rx="4" fill="#ffd60a" />
-                  <circle cx="50" cy="50" r="4" fill="#16112b" />
-                  <rect x="68" y="40" width="6" height="6" fill="#16112b" />
-                  <rect x="78" y="48" width="6" height="6" fill="#ff2e93" />
-                  <rect x="86" y="40" width="6" height="6" fill="#16112b" />
-                  <rect x="40" y="68" width="6" height="6" fill="#16112b" />
-                  <rect x="50" y="74" width="6" height="6" fill="#19c3f0" />
-                  <rect x="68" y="68" width="8" height="6" fill="#16112b" />
-                  <rect x="80" y="76" width="6" height="6" fill="#16112b" />
-                  <rect x="44" y="84" width="6" height="6" fill="#16112b" />
-                  <rect x="60" y="84" width="6" height="6" fill="#16112b" />
-                  <rect x="74" y="86" width="12" height="6" fill="#16112b" />
-                </svg>
-              </div>
-              <p class="qr-sub" style="margin:2px 0 6px">Scan with any UPI app to pay <b id="qrpayamt">₹0.00</b></p>
-              <div class="qr-app-logos">
-                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#1a73e8"><circle cx="12" cy="12" r="10"/></svg> Google Pay</span>
-                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#5f259f"><circle cx="12" cy="12" r="10"/></svg> PhonePe</span>
-                <span><svg width="10" height="10" viewBox="0 0 24 24" fill="#00b9f1"><circle cx="12" cy="12" r="10"/></svg> Paytm</span>
+            <div class="pay-hero">
+              <div class="pay-hero-label">Total Amount</div>
+              <div class="pay-hero-amount" id="payAmount">₹0.00</div>
+              <div class="pay-hero-eta" id="payEta">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                <span id="payEtaText">Estimated ~18 sec</span>
               </div>
             </div>
 
-            <!-- View 2: Direct UPI Apps Grid -->
-            <div class="pay-apps-view hide" id="payAppsView">
-              <button type="button" class="pay-app-btn selected" data-p="gpay">
-                <span class="pay-app-icon gpay">G</span>
-                <div>
-                  <div style="font-weight:800;font-size:12.5px">Google Pay</div>
-                  <small style="color:var(--mu);font-size:10.5px">UPI Direct</small>
-                </div>
-              </button>
-              <button type="button" class="pay-app-btn" data-p="phonepe">
-                <span class="pay-app-icon phonepe">Pe</span>
-                <div>
-                  <div style="font-weight:800;font-size:12.5px">PhonePe</div>
-                  <small style="color:var(--mu);font-size:10.5px">Instant UPI</small>
-                </div>
-              </button>
-              <button type="button" class="pay-app-btn" data-p="paytm">
-                <span class="pay-app-icon paytm">Pay</span>
-                <div>
-                  <div style="font-weight:800;font-size:12.5px">Paytm</div>
-                  <small style="color:var(--mu);font-size:10.5px">UPI / Wallet</small>
-                </div>
-              </button>
-              <button type="button" class="pay-app-btn" data-p="upi">
-                <span class="pay-app-icon upi">UPI</span>
-                <div>
-                  <div style="font-weight:800;font-size:12.5px">Any UPI</div>
-                  <small style="color:var(--mu);font-size:10.5px">BHIM / Bank</small>
-                </div>
-              </button>
+            <div class="pay-methods-strip">
+              <span class="pay-method-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+                UPI
+              </span>
+              <span class="pay-method-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                Cards
+              </span>
+              <span class="pay-method-badge">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Wallets
+              </span>
             </div>
 
-            <div class="pay-guarantee">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              <span>Instant Verification · Machine M-01</span>
+            <div class="pay-secured">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><polyline points="9 12 11 14 15 10"/></svg>
+              <span>Secured by <b>Razorpay</b> · Instant Verification</span>
             </div>
+          </div>
+
+          <!-- Payment retry area (hidden by default) -->
+          <div class="pay-retry-card hide" id="payRetry">
+            <h3 style="margin:0;font-size:15px;color:#ef4444">⚠️ Payment Failed</h3>
+            <p id="payRetryMsg">Something went wrong. Please try again.</p>
+            <button class="btn" id="payRetryBtn" type="button">Retry Payment</button>
           </div>
 
           <div style="display:flex;gap:10px;margin-top:12px">
@@ -4110,8 +4226,8 @@
       if (ins) ins.innerHTML = '<span class="badge"><i class="ico idea"></i></span><div><b>' + tip[0] + '</b><small>' + tip[1] + '</small></div>';
       updateSliderUI(currentSlide);
       $('#rt').classList.toggle('hide', S.range !== 'custom');
-      if ($('#qrpayamt')) $('#qrpayamt').textContent = money(c.total);
-      if ($('#eta')) $('#eta').textContent = 'Estimated ' + eta(c);
+      if ($('#payAmount')) $('#payAmount').innerHTML = money(c.total);
+      if ($('#payEtaText')) $('#payEtaText').textContent = 'Estimated ' + eta(c);
       const ext = S.file ? S.file.name.split('.').pop().toUpperCase() : 'PDF';
       const fileName = S.file ? S.file.name : 'Document.pdf';
       const fileBadge = S.pl || S.img ? ' (edited)' : '';
@@ -4279,7 +4395,10 @@
           scrollToSlide(0);
           return;
         }
-        run();
+        const nxBtn = $('#nx');
+        if (nxBtn && !nxBtn.classList.contains('is-loading')) {
+          run();
+        }
       }
     };
 
@@ -4366,30 +4485,14 @@
 
     $('#rt').oninput = e => { S.rt = e.target.value; upd() };
 
-    // Payment Switcher & UPI App selection
-    const paySwitch = $('#paySwitch');
-    if (paySwitch) {
-      paySwitch.onclick = e => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        const tab = btn.dataset.tab;
-        $('#tabQr').classList.toggle('active', tab === 'qr');
-        $('#tabApps').classList.toggle('active', tab === 'apps');
-        $('#payQrView').classList.toggle('hide', tab !== 'qr');
-        $('#payAppsView').classList.toggle('hide', tab !== 'apps');
-        Snd.tap();
+    // Payment retry button
+    const payRetryBtn = $('#payRetryBtn');
+    if (payRetryBtn) {
+      payRetryBtn.onclick = () => {
+        $('#payRetry').classList.add('hide');
+        run();
       };
     }
-
-    const payApps = $$('.pay-app-btn');
-    payApps.forEach(b => {
-      b.onclick = () => {
-        payApps.forEach(x => x.classList.toggle('selected', x === b));
-        S.pay = b.dataset.p;
-        Snd.tap();
-        toast('Selected ' + b.querySelector('div div').textContent, '<span class="ico sm fast"></span>');
-      };
-    });
 
     const updateThemeIcon = () => {
       const r = document.documentElement;
@@ -4569,6 +4672,27 @@
         currentJob = d.job;
         $('#jc').textContent = currentJob.jobCode;
 
+        // Show loading state on pay button
+        const nxBtn = $('#nx');
+        if (nxBtn) { nxBtn.classList.add('is-loading'); nxBtn.textContent = 'Processing…'; }
+
+        // Show processing overlay
+        let processingEl = document.createElement('div');
+        processingEl.className = 'pay-processing';
+        processingEl.id = 'payProcessing';
+        processingEl.innerHTML = '<div class="pay-processing-spinner"></div><div class="pay-processing-text">Setting up payment…</div><div class="pay-processing-sub">Please wait, do not close this page</div>';
+        document.body.appendChild(processingEl);
+
+        const removeProcessing = () => {
+          const el = $('#payProcessing');
+          if (el) el.remove();
+          if (nxBtn) {
+            nxBtn.classList.remove('is-loading');
+            const c = calc();
+            nxBtn.textContent = 'Pay & Print ' + money(c.total);
+          }
+        };
+
         // Create Razorpay payment order
         const orderRes = await fetch(API_BASE + '/payments/create-order', {
           method: 'POST',
@@ -4577,8 +4701,10 @@
         });
         const orderData = await orderRes.json();
 
-        // If Razorpay is active and available, trigger real UPI / Card checkout modal
+        // If Razorpay is active and available, trigger real checkout modal
         if (orderData && orderData.keyId && orderData.razorpayOrderId && window.Razorpay) {
+          removeProcessing();
+
           const rzpOptions = {
             key: orderData.keyId,
             amount: Math.round(currentJob.pricing.totalPrice * 100),
@@ -4587,7 +4713,13 @@
             description: `Print Job #${currentJob.jobCode}`,
             order_id: orderData.razorpayOrderId,
             handler: async function (response) {
-              toast('Payment verified! Printing…', '✅');
+              // Show success processing
+              let successEl = document.createElement('div');
+              successEl.className = 'pay-processing';
+              successEl.id = 'payProcessing';
+              successEl.innerHTML = '<div class="pay-processing-spinner"></div><div class="pay-processing-text">Payment received! ✅</div><div class="pay-processing-sub">Starting your print job…</div>';
+              document.body.appendChild(successEl);
+
               await fetch(API_BASE + '/payments/verify', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -4599,30 +4731,33 @@
                   autoSimulate: false
                 })
               }).catch(() => null);
-              startPrintingUI(currentJob);
+
+              setTimeout(() => {
+                const el = $('#payProcessing');
+                if (el) el.remove();
+                toast('Payment verified! Printing…', '✅');
+                startPrintingUI(currentJob);
+              }, 800);
             },
             prefill: {
-              name: 'PrintBox Customer',
-              email: 'pay@printbox.in',
-              contact: '9840123456',
               method: 'upi'
             },
             config: {
               display: {
                 blocks: {
                   upi: {
-                    name: 'Pay using UPI App',
+                    name: 'Pay using UPI',
                     instruments: [
                       {
                         method: 'upi',
-                        flows: ['intent', 'qr']
+                        flows: ['intent', 'qr', 'collect']
                       }
                     ]
                   }
                 },
                 sequence: ['block.upi'],
                 preferences: {
-                  show_default_blocks: false
+                  show_default_blocks: true
                 }
               }
             },
@@ -4631,20 +4766,31 @@
             },
             modal: {
               ondismiss: function () {
-                toast('Payment cancelled', '⚠️');
+                removeProcessing();
+                toast('Payment cancelled — you can retry anytime', '⚠️');
               }
             }
           };
 
           const rzp = new window.Razorpay(rzpOptions);
           rzp.on('payment.failed', function (resp) {
-            toast('Payment failed: ' + (resp.error?.description || 'Please try again'), '❌');
+            removeProcessing();
+            const errMsg = resp.error?.description || 'Payment could not be completed. Please try again.';
+            toast('Payment failed', '❌');
+            // Show retry card
+            const retryCard = $('#payRetry');
+            if (retryCard) {
+              retryCard.classList.remove('hide');
+              const retryMsg = $('#payRetryMsg');
+              if (retryMsg) retryMsg.textContent = errMsg;
+            }
           });
           rzp.open();
           return;
         }
 
         // Direct fallback / Demo payment
+        removeProcessing();
         await fetch(API_BASE + '/payments/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -4654,6 +4800,10 @@
         return;
       } catch (x) {
         console.error('Run print error:', x);
+        const el = $('#payProcessing');
+        if (el) el.remove();
+        const nxBtn2 = $('#nx');
+        if (nxBtn2) { nxBtn2.classList.remove('is-loading'); nxBtn2.textContent = 'Retry Payment'; }
       }
       toast('Could not connect to PrintBox Backend Server!', '<span class="ico sm plug"></span>');
     }
