@@ -8,32 +8,61 @@ const path_1 = __importDefault(require("path"));
 const jobService_1 = require("../services/jobService");
 const sseService_1 = require("../services/sseService");
 const config_1 = require("../config");
+const fs_1 = __importDefault(require("fs"));
 const paymentService_1 = require("../services/paymentService");
+const pdfProcessorService_1 = require("../services/pdfProcessorService");
 const router = (0, express_1.Router)();
 /**
  * POST /api/jobs
  * Create a new print job (validation is done inside JobService.createJob)
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     try {
-        const { file, options, machineId, paymentMethod } = req.body;
-        if (!file || !file.fileName) {
+        const { file, files, options, machineId, paymentMethod } = req.body;
+        if ((!file || !file.fileName) && (!Array.isArray(files) || files.length === 0)) {
             return res.status(400).json({ error: 'File information is required' });
         }
         if (!options) {
             return res.status(400).json({ error: 'Print options are required' });
         }
-        const resolvedFilePath = file.filePath || (file.fileName ? path_1.default.join(config_1.config.uploadDir, path_1.default.basename(file.fileName)) : '');
-        const fileInfo = {
-            id: file.id || 'unknown',
-            originalName: String(file.originalName || 'document').slice(0, 255),
-            fileName: String(file.fileName).slice(0, 255),
-            filePath: resolvedFilePath,
-            fileSize: Math.max(0, Number(file.fileSize) || 0),
-            mimeType: String(file.mimeType || 'application/octet-stream').slice(0, 100),
-            detectedPages: Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1))),
-            createdAt: file.createdAt || new Date().toISOString()
-        };
+        let fileInfo;
+        // Check if multiple files were provided -> Merge them into a unified PDF
+        if (Array.isArray(files) && files.length > 1) {
+            const filePaths = files.map((f) => f.filePath || (f.fileName ? path_1.default.join(config_1.config.uploadDir, path_1.default.basename(f.fileName)) : ''));
+            const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e4);
+            const mergedFileName = `merged_${uniqueSuffix}.pdf`;
+            const mergedFilePath = path_1.default.join(config_1.config.uploadDir, mergedFileName);
+            const mergedPages = await pdfProcessorService_1.PdfProcessorService.mergeDocuments(filePaths, mergedFilePath);
+            let mergedSize = 0;
+            try {
+                mergedSize = fs_1.default.statSync(mergedFilePath).size;
+            }
+            catch (_) { }
+            fileInfo = {
+                id: `merged-${uniqueSuffix}`,
+                originalName: `${files.length} Documents Combined (${files.map((f) => f.originalName || 'file').slice(0, 3).join(', ')}${files.length > 3 ? '…' : ''})`,
+                fileName: mergedFileName,
+                filePath: mergedFilePath,
+                fileSize: mergedSize,
+                mimeType: 'application/pdf',
+                detectedPages: Math.min(500, Math.max(1, mergedPages)),
+                createdAt: new Date().toISOString()
+            };
+        }
+        else {
+            const primaryFile = (Array.isArray(files) && files.length === 1) ? files[0] : file;
+            const resolvedFilePath = primaryFile.filePath || (primaryFile.fileName ? path_1.default.join(config_1.config.uploadDir, path_1.default.basename(primaryFile.fileName)) : '');
+            fileInfo = {
+                id: primaryFile.id || 'unknown',
+                originalName: String(primaryFile.originalName || 'document').slice(0, 255),
+                fileName: String(primaryFile.fileName).slice(0, 255),
+                filePath: resolvedFilePath,
+                fileSize: Math.max(0, Number(primaryFile.fileSize) || 0),
+                mimeType: String(primaryFile.mimeType || 'application/octet-stream').slice(0, 100),
+                detectedPages: Math.min(500, Math.max(1, Math.floor(Number(primaryFile.detectedPages) || 1))),
+                createdAt: primaryFile.createdAt || new Date().toISOString()
+            };
+        }
         const targetMachineId = String(machineId || config_1.config.defaultMachineId).slice(0, 20);
         const targetPaymentMethod = String(paymentMethod || 'gpay').slice(0, 20);
         const job = jobService_1.JobService.createJob(fileInfo, options, targetMachineId, targetPaymentMethod);

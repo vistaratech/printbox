@@ -38,6 +38,55 @@ class PdfProcessorService {
         return sorted.length > 0 ? sorted : Array.from({ length: totalPages }, (_, i) => i);
     }
     /**
+     * Merges multiple files (PDFs and/or images) into a single unified PDF document.
+     * Returns total page count of the merged document.
+     */
+    static async mergeDocuments(filePaths, outputPath) {
+        this.ensureProcessedDir();
+        const mergedDoc = await pdf_lib_1.PDFDocument.create();
+        for (const fp of filePaths) {
+            if (!fs_1.default.existsSync(fp)) {
+                console.warn(`[PdfProcessor] Skipping missing file during merge: ${fp}`);
+                continue;
+            }
+            const ext = path_1.default.extname(fp).toLowerCase();
+            try {
+                if (['.jpg', '.jpeg', '.png'].includes(ext)) {
+                    const imgBytes = fs_1.default.readFileSync(fp);
+                    const img = ext === '.png' ? await mergedDoc.embedPng(imgBytes) : await mergedDoc.embedJpg(imgBytes);
+                    const page = mergedDoc.addPage([595.28, 841.89]);
+                    const { width, height } = img.scaleToFit(595.28 - 40, 841.89 - 40);
+                    page.drawImage(img, {
+                        x: (595.28 - width) / 2,
+                        y: (841.89 - height) / 2,
+                        width,
+                        height
+                    });
+                }
+                else if (ext === '.pdf') {
+                    const fileBytes = fs_1.default.readFileSync(fp);
+                    const srcDoc = await pdf_lib_1.PDFDocument.load(fileBytes, { ignoreEncryption: true });
+                    const pageIndices = srcDoc.getPageIndices();
+                    const copiedPages = await mergedDoc.copyPages(srcDoc, pageIndices);
+                    for (const page of copiedPages) {
+                        mergedDoc.addPage(page);
+                    }
+                }
+            }
+            catch (err) {
+                console.error(`[PdfProcessor] Failed to merge file ${fp}:`, err?.message || err);
+            }
+        }
+        if (mergedDoc.getPageCount() === 0) {
+            // Fallback empty page if all files failed
+            mergedDoc.addPage([595.28, 841.89]);
+        }
+        const mergedBytes = await mergedDoc.save({ useObjectStreams: true });
+        fs_1.default.writeFileSync(outputPath, mergedBytes);
+        console.log(`[PdfProcessor] Merged ${filePaths.length} documents into ${outputPath} (${mergedDoc.getPageCount()} pages)`);
+        return mergedDoc.getPageCount();
+    }
+    /**
      * Pre-process an uploaded file according to user's PrintOptions:
      * 1. Extracts only selected pages (e.g. range 1-3, or excluded pages in page editor)
      * 2. Applies page rotations (0, 90, 180, 270)

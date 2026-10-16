@@ -3,8 +3,10 @@ import path from 'path';
 import { JobService } from '../services/jobService';
 import { SseService } from '../services/sseService';
 import { config } from '../config';
+import fs from 'fs';
 import { PrintOptions, UploadedFileInfo } from '../types';
 import { PaymentService } from '../services/paymentService';
+import { PdfProcessorService } from '../services/pdfProcessorService';
 
 const router = Router();
 
@@ -12,11 +14,11 @@ const router = Router();
  * POST /api/jobs
  * Create a new print job (validation is done inside JobService.createJob)
  */
-router.post('/', (req: Request, res: Response) => {
+router.post('/', async (req: Request, res: Response) => {
   try {
-    const { file, options, machineId, paymentMethod } = req.body;
+    const { file, files, options, machineId, paymentMethod } = req.body;
 
-    if (!file || !file.fileName) {
+    if ((!file || !file.fileName) && (!Array.isArray(files) || files.length === 0)) {
       return res.status(400).json({ error: 'File information is required' });
     }
 
@@ -24,18 +26,46 @@ router.post('/', (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Print options are required' });
     }
 
-    const resolvedFilePath = file.filePath || (file.fileName ? path.join(config.uploadDir, path.basename(file.fileName)) : '');
+    let fileInfo: UploadedFileInfo;
 
-    const fileInfo: UploadedFileInfo = {
-      id: file.id || 'unknown',
-      originalName: String(file.originalName || 'document').slice(0, 255),
-      fileName: String(file.fileName).slice(0, 255),
-      filePath: resolvedFilePath,
-      fileSize: Math.max(0, Number(file.fileSize) || 0),
-      mimeType: String(file.mimeType || 'application/octet-stream').slice(0, 100),
-      detectedPages: Math.min(500, Math.max(1, Math.floor(Number(file.detectedPages) || 1))),
-      createdAt: file.createdAt || new Date().toISOString()
-    };
+    // Check if multiple files were provided -> Merge them into a unified PDF
+    if (Array.isArray(files) && files.length > 1) {
+      const filePaths = files.map((f: any) =>
+        f.filePath || (f.fileName ? path.join(config.uploadDir, path.basename(f.fileName)) : '')
+      );
+      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e4);
+      const mergedFileName = `merged_${uniqueSuffix}.pdf`;
+      const mergedFilePath = path.join(config.uploadDir, mergedFileName);
+
+      const mergedPages = await PdfProcessorService.mergeDocuments(filePaths, mergedFilePath);
+      let mergedSize = 0;
+      try { mergedSize = fs.statSync(mergedFilePath).size; } catch (_) {}
+
+      fileInfo = {
+        id: `merged-${uniqueSuffix}`,
+        originalName: `${files.length} Documents Combined (${files.map((f: any) => f.originalName || 'file').slice(0, 3).join(', ')}${files.length > 3 ? '…' : ''})`,
+        fileName: mergedFileName,
+        filePath: mergedFilePath,
+        fileSize: mergedSize,
+        mimeType: 'application/pdf',
+        detectedPages: Math.min(500, Math.max(1, mergedPages)),
+        createdAt: new Date().toISOString()
+      };
+    } else {
+      const primaryFile = (Array.isArray(files) && files.length === 1) ? files[0] : file;
+      const resolvedFilePath = primaryFile.filePath || (primaryFile.fileName ? path.join(config.uploadDir, path.basename(primaryFile.fileName)) : '');
+
+      fileInfo = {
+        id: primaryFile.id || 'unknown',
+        originalName: String(primaryFile.originalName || 'document').slice(0, 255),
+        fileName: String(primaryFile.fileName).slice(0, 255),
+        filePath: resolvedFilePath,
+        fileSize: Math.max(0, Number(primaryFile.fileSize) || 0),
+        mimeType: String(primaryFile.mimeType || 'application/octet-stream').slice(0, 100),
+        detectedPages: Math.min(500, Math.max(1, Math.floor(Number(primaryFile.detectedPages) || 1))),
+        createdAt: primaryFile.createdAt || new Date().toISOString()
+      };
+    }
 
     const targetMachineId = String(machineId || config.defaultMachineId).slice(0, 20);
     const targetPaymentMethod = String(paymentMethod || 'gpay').slice(0, 20);
