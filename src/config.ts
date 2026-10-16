@@ -22,5 +22,15 @@ export const config = {
     doubleSideDiscountMultiplier: 0.9, // 10% discount on double sided printing
     highQualityExtra: 0.5, // Rs 0.50 extra per page
     stapleRatePerCopy: 2.0 // Rs 2 per copy for stapling
+  },
+  epson: {
+    printerEmail: process.env.EPSON_PRINTER_EMAIL || '',
+    senderEmail: process.env.SMTP_USER || '',
+    smtpUser: process.env.SMTP_USER || '',
+    smtpPass: process.env.SMTP_PASS || '',
+    smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort: parseInt(process.env.SMTP_PORT || '465', 10),
+    smtpSecure: process.env.SMTP_SECURE !== 'false',
+    enabled: Boolean(process.env.EPSON_PRINTER_EMAIL && process.env.SMTP_USER && process.env.SMTP_PASS)
   }
 };
