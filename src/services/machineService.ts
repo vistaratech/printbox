@@ -2,7 +2,7 @@ import { MachineInfo } from '../types';
 import { config } from '../config';
 import { saveMachine, loadMachine } from './databaseService';
 
-const STALE_THRESHOLD_MS = 90 * 1000;
+const STALE_THRESHOLD_MS = process.env.NODE_ENV === 'production' ? 90 * 1000 : 24 * 60 * 60 * 1000;
 
 export class MachineService {
   private static initialized = false;
