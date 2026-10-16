@@ -5017,6 +5017,7 @@
           if (currentEventSource) { currentEventSource.close(); currentEventSource = null }
           $('#done').classList.remove('hide');
           $('#again').classList.remove('hide');
+          try { localStorage.removeItem('pb_active_job'); } catch (_) {}
           checkMachineStatus();
         }
       };
@@ -5105,6 +5106,16 @@
         const d = await r.json();
         currentJob = d.job;
         $('#jc').textContent = currentJob.jobCode;
+
+        // Persist active job to localStorage so if mobile browser reloads on GPay switch, we auto-recover!
+        try {
+          localStorage.setItem('pb_active_job', JSON.stringify({
+            jobCode: currentJob.jobCode,
+            totalPrice: currentJob.pricing ? currentJob.pricing.totalPrice : 0,
+            originalName: currentJob.file ? currentJob.file.originalName : '',
+            timestamp: Date.now()
+          }));
+        } catch (_) {}
 
         // Show loading state on pay button
         const nxBtn = $('#nx');
@@ -5283,9 +5294,85 @@
       $$('.seg').forEach(g => g.querySelectorAll('button').forEach((b, i) => b.classList.toggle('on', b.dataset.v === String(D[g.dataset.k]))));
       $('#cp').value = 1; $('#rt').value = '';
       $$('[data-t]').forEach(b => { b.classList.toggle('on', D[b.dataset.t]); b.setAttribute('aria-checked', D[b.dataset.t]) });
+      try { localStorage.removeItem('pb_active_job'); } catch (_) {}
+      const b = $('#pbRecoveryBanner'); if (b) b.remove();
       go(1); toast('Ready for your next file!', '<span class="ico sm print"></span>');
     };
     go(1);
+
+    // ── 100% Automatic Zero-Click Payment Recovery (Mobile GPay / UPI Return) ──
+    (async function autoRecoverActiveJob() {
+      try {
+        const raw = localStorage.getItem('pb_active_job');
+        if (!raw) return;
+        const item = JSON.parse(raw);
+        if (!item || !item.jobCode) return;
+
+        // Expire if older than 1.5 hours
+        if (Date.now() - (item.timestamp || 0) > 90 * 60 * 1000) {
+          localStorage.removeItem('pb_active_job');
+          return;
+        }
+
+        // 1. Immediately show full-screen auto-verifying spinner (Zero clicks required!)
+        let overlay = document.createElement('div');
+        overlay.className = 'pay-processing';
+        overlay.id = 'autoPayRecovery';
+        overlay.innerHTML = `
+          <div class="pay-processing-spinner"></div>
+          <div class="pay-processing-text">Confirming Google Pay payment… ⏳</div>
+          <div class="pay-processing-sub">Auto-checking Job #${item.jobCode} with bank</div>
+        `;
+        document.body.appendChild(overlay);
+
+        const removeOverlay = () => {
+          const el = $('#autoPayRecovery');
+          if (el) el.remove();
+        };
+
+        // 2. Auto-polling loop: asks server to sync with Razorpay every 1.2s (up to 8 times)
+        let attempts = 0;
+        const maxAttempts = 8; // ~10 seconds total
+
+        const pollSync = async () => {
+          attempts++;
+          try {
+            const syncRes = await fetch(API_BASE + '/payments/sync-status', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ jobCode: item.jobCode })
+            });
+
+            if (syncRes.ok) {
+              const syncData = await syncRes.json();
+              if (syncData && (syncData.isPaid || (syncData.job && syncData.job.status !== 'pending_payment'))) {
+                // Success! 100% Automatic jump to printing
+                removeOverlay();
+                currentJob = syncData.job;
+                $('#jc').textContent = syncData.job.jobCode;
+                toast('Payment received! Printing your document… ✅', '🖨️');
+                startPrintingUI(syncData.job);
+                return;
+              }
+            }
+          } catch (_) {}
+
+          if (attempts < maxAttempts) {
+            setTimeout(pollSync, 1200);
+          } else {
+            // If after 10s no payment was confirmed, cleanly dismiss
+            removeOverlay();
+            localStorage.removeItem('pb_active_job');
+            toast('Payment not confirmed. You can retry anytime.', 'ℹ️');
+          }
+        };
+
+        // Start auto-sync immediately
+        pollSync();
+      } catch (e) {
+        console.warn('Auto recovery notice:', e);
+      }
+    })();
 
     // ── Floating ambient particles ──
     (function () {

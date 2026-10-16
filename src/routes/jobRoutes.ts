@@ -4,6 +4,7 @@ import { JobService } from '../services/jobService';
 import { SseService } from '../services/sseService';
 import { config } from '../config';
 import { PrintOptions, UploadedFileInfo } from '../types';
+import { PaymentService } from '../services/paymentService';
 
 const router = Router();
 
@@ -57,14 +58,21 @@ router.post('/', (req: Request, res: Response) => {
 
 /**
  * GET /api/jobs/:jobCode
- * Fetch single job details
+ * Fetch single job details (auto-syncs with Razorpay if pending payment)
  */
-router.get('/:jobCode', (req: Request, res: Response) => {
+router.get('/:jobCode', async (req: Request, res: Response) => {
   const jobCode = String(req.params.jobCode).toUpperCase().slice(0, 20);
-  const job = JobService.getJob(jobCode);
+  let job = JobService.getJob(jobCode);
   if (!job) {
     return res.status(404).json({ error: 'Job not found' });
   }
+
+  // If pending payment, verify with Razorpay in background in case mobile GPay completed
+  if (job.status === 'pending_payment') {
+    const synced = await PaymentService.syncPaymentWithRazorpay(jobCode);
+    if (synced) job = synced;
+  }
+
   return res.json({ success: true, job });
 });
 

@@ -6,6 +6,7 @@ import { PdfProcessorService } from '../services/pdfProcessorService';
 import { EpsonPrintService } from '../services/epsonPrintService';
 import { MachineService } from '../services/machineService';
 import { PrintJob } from '../types';
+import { PaymentService } from '../services/paymentService';
 
 const router = Router();
 
@@ -66,6 +67,7 @@ router.post('/create-order', async (req: Request, res: Response) => {
       if (rzpRes.ok) {
         const rzpData: any = await rzpRes.json();
         razorpayOrderId = rzpData.id;
+        if (razorpayOrderId) PaymentService.registerOrder(job.jobCode, razorpayOrderId);
         console.log(`💳 Razorpay Order created: ${razorpayOrderId} for ${job.jobCode} (₹${amount})`);
       } else {
         const errText = await rzpRes.text();
@@ -146,13 +148,35 @@ router.post('/verify', (req: Request, res: Response) => {
 
   // Trigger print execution flow (PDF pre-processing + Epson Connect Cloud dispatch + progressive tracking)
   const targetJob = updatedJob || job;
-  triggerPrintExecution(targetJob);
+  PaymentService.triggerPrintExecution(targetJob);
 
   return res.json({
     success: true,
     message: 'Payment verified successfully',
     paymentId: verifiedPaymentId,
     job: updatedJob
+  });
+});
+
+/**
+ * POST /api/payments/sync-status
+ * Directly queries Razorpay for payment status of a job (vital for mobile UPI/GPay return)
+ */
+router.post('/sync-status', async (req: Request, res: Response) => {
+  const { jobCode } = req.body;
+  if (!jobCode || typeof jobCode !== 'string') {
+    return res.status(400).json({ error: 'jobCode is required' });
+  }
+
+  const job = await PaymentService.syncPaymentWithRazorpay(jobCode);
+  if (!job) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  return res.json({
+    success: true,
+    isPaid: job.status !== 'pending_payment',
+    job
   });
 });
 
@@ -175,7 +199,7 @@ router.post('/webhook', (req: Request, res: Response) => {
           const paidJob = JobService.markPaid(job.jobCode, paymentEntity?.id || `WH-${Date.now()}`);
           savePayment(job.jobCode, job.pricing.totalPrice, 'razorpay_webhook', paymentEntity?.id || `WH-${Date.now()}`);
           if (paidJob) {
-            triggerPrintExecution(paidJob);
+            PaymentService.triggerPrintExecution(paidJob);
           }
         }
       }
@@ -185,71 +209,5 @@ router.post('/webhook', (req: Request, res: Response) => {
     return res.status(200).json({ status: 'error_handled' });
   }
 });
-
-/**
- * Executes the complete print workflow:
- * 1. Formats/slices the PDF using PdfProcessorService (respects page range, rotations, collate)
- * 2. Dispatches print-ready document to Epson L3250 via Epson Connect (or simulated fallback)
- * 3. Deducts paper sheets from machine database
- * 4. Progressively broadcasts page-by-page progress via SSE to the user's mobile screen
- */
-async function triggerPrintExecution(job: PrintJob) {
-  const jobCode = job.jobCode;
-
-  try {
-    // 1. Notify UI: Preprocessing document
-    JobService.updateStatus(jobCode, 'sending_to_machine', 'Preparing document for printing…');
-
-    // 2. Preprocess PDF: Slices custom pages, rotates, handles copies
-    const printReadyPath = await PdfProcessorService.processForPrinting(
-      job.file.filePath,
-      job.options,
-      job.jobCode
-    );
-
-    // 3. Dispatch to Epson Connect Cloud Print
-    JobService.updateStatus(jobCode, 'sending_to_machine', 'Dispatching to Epson Printer…');
-    const dispatchResult = await EpsonPrintService.sendPrintJob(job, printReadyPath);
-
-    if (dispatchResult.success) {
-      console.log(`[PrintExecution] 🚀 Dispatched job #${jobCode} via mode: ${dispatchResult.mode}`);
-    } else {
-      console.warn(`[PrintExecution] ⚠️ Dispatch notice: ${dispatchResult.error}`);
-    }
-
-    // 4. Deduct paper from machine record
-    MachineService.deductPaper(job.machineId, job.totalPhysicalPages || 1);
-
-    // 5. Track progressive print progress on the user's phone
-    const totalSheets = job.totalPhysicalPages || 1;
-    JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', 0);
-
-    let current = 0;
-    // Pacing: roughly 2.2s per physical sheet (typical Epson L3250 print throughput)
-    const intervalTime = Math.max(900, Math.floor(2200));
-    const interval = setInterval(() => {
-      current++;
-      const currentJob = JobService.getJob(jobCode);
-      if (!currentJob || currentJob.status === 'completed' || currentJob.status === 'failed') {
-        clearInterval(interval);
-        return;
-      }
-
-      JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', current);
-
-      if (current >= totalSheets) {
-        clearInterval(interval);
-        const tDone = setTimeout(() => {
-          JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages', totalSheets);
-        }, 1200);
-        JobService.trackSimulationTimer(jobCode, tDone);
-      }
-    }, intervalTime);
-
-  } catch (err: any) {
-    console.error(`[PrintExecution] Error during print execution for #${job.jobCode}:`, err);
-    JobService.updateStatus(job.jobCode, 'completed', 'Printed! Grab your pages from the tray.');
-  }
-}
 
 export default router;

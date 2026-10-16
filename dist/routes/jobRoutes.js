@@ -8,6 +8,7 @@ const path_1 = __importDefault(require("path"));
 const jobService_1 = require("../services/jobService");
 const sseService_1 = require("../services/sseService");
 const config_1 = require("../config");
+const paymentService_1 = require("../services/paymentService");
 const router = (0, express_1.Router)();
 /**
  * POST /api/jobs
@@ -47,13 +48,19 @@ router.post('/', (req, res) => {
 });
 /**
  * GET /api/jobs/:jobCode
- * Fetch single job details
+ * Fetch single job details (auto-syncs with Razorpay if pending payment)
  */
-router.get('/:jobCode', (req, res) => {
+router.get('/:jobCode', async (req, res) => {
     const jobCode = String(req.params.jobCode).toUpperCase().slice(0, 20);
-    const job = jobService_1.JobService.getJob(jobCode);
+    let job = jobService_1.JobService.getJob(jobCode);
     if (!job) {
         return res.status(404).json({ error: 'Job not found' });
+    }
+    // If pending payment, verify with Razorpay in background in case mobile GPay completed
+    if (job.status === 'pending_payment') {
+        const synced = await paymentService_1.PaymentService.syncPaymentWithRazorpay(jobCode);
+        if (synced)
+            job = synced;
     }
     return res.json({ success: true, job });
 });

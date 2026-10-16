@@ -3,7 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.MachineService = void 0;
 const config_1 = require("../config");
 const databaseService_1 = require("./databaseService");
-const STALE_THRESHOLD_MS = 90 * 1000;
+const STALE_THRESHOLD_MS = process.env.NODE_ENV === 'production' ? 90 * 1000 : 24 * 60 * 60 * 1000;
 class MachineService {
     static initialized = false;
     static {

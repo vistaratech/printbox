@@ -11,9 +11,9 @@ export interface PrintDispatchResult {
 }
 
 export class EpsonPrintService {
-  private static transporter: nodemailer.Transporter | null = null;
+  private static transporter: any = null;
 
-  private static getTransporter(): nodemailer.Transporter | null {
+  private static getTransporter(): any {
     if (!config.epson.enabled) return null;
 
     if (!this.transporter) {
@@ -65,7 +65,7 @@ export class EpsonPrintService {
 
       console.log(`[EpsonPrintService] 🚀 Dispatching Job #${job.jobCode} to Epson Printer (${config.epson.printerEmail})…`);
 
-      const mailOptions: nodemailer.SendMailOptions = {
+      const mailOptions: any = {
         from: `"PrintBox Kiosk" <${config.epson.smtpUser}>`,
         to: config.epson.printerEmail,
         subject: `PrintJob #${job.jobCode}`,

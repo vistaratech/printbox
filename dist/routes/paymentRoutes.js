@@ -7,6 +7,7 @@ const crypto_1 = __importDefault(require("crypto"));
 const express_1 = require("express");
 const jobService_1 = require("../services/jobService");
 const databaseService_1 = require("../services/databaseService");
+const paymentService_1 = require("../services/paymentService");
 const router = (0, express_1.Router)();
 /**
  * POST /api/payments/create-order
@@ -58,6 +59,8 @@ router.post('/create-order', async (req, res) => {
             if (rzpRes.ok) {
                 const rzpData = await rzpRes.json();
                 razorpayOrderId = rzpData.id;
+                if (razorpayOrderId)
+                    paymentService_1.PaymentService.registerOrder(job.jobCode, razorpayOrderId);
                 console.log(`💳 Razorpay Order created: ${razorpayOrderId} for ${job.jobCode} (₹${amount})`);
             }
             else {
@@ -127,15 +130,33 @@ router.post('/verify', (req, res) => {
     if (updatedJob) {
         (0, databaseService_1.savePayment)(updatedJob.jobCode, updatedJob.pricing.totalPrice, updatedJob.paymentMethod, verifiedPaymentId);
     }
-    // Only simulate if explicitly requested (e.g. headless tests)
-    if (autoSimulate === true) {
-        simulatePrintingFlow(job.jobCode);
-    }
+    // Trigger print execution flow (PDF pre-processing + Epson Connect Cloud dispatch + progressive tracking)
+    const targetJob = updatedJob || job;
+    paymentService_1.PaymentService.triggerPrintExecution(targetJob);
     return res.json({
         success: true,
         message: 'Payment verified successfully',
         paymentId: verifiedPaymentId,
         job: updatedJob
+    });
+});
+/**
+ * POST /api/payments/sync-status
+ * Directly queries Razorpay for payment status of a job (vital for mobile UPI/GPay return)
+ */
+router.post('/sync-status', async (req, res) => {
+    const { jobCode } = req.body;
+    if (!jobCode || typeof jobCode !== 'string') {
+        return res.status(400).json({ error: 'jobCode is required' });
+    }
+    const job = await paymentService_1.PaymentService.syncPaymentWithRazorpay(jobCode);
+    if (!job) {
+        return res.status(404).json({ error: 'Job not found' });
+    }
+    return res.json({
+        success: true,
+        isPaid: job.status !== 'pending_payment',
+        job
     });
 });
 /**
@@ -153,8 +174,11 @@ router.post('/webhook', (req, res) => {
                 const job = jobService_1.JobService.getJob(jobCode.toUpperCase());
                 if (job && job.status === 'pending_payment') {
                     console.log(`🔔 Webhook auto-verifying payment for job: ${jobCode}`);
-                    jobService_1.JobService.markPaid(job.jobCode, paymentEntity?.id || `WH-${Date.now()}`);
+                    const paidJob = jobService_1.JobService.markPaid(job.jobCode, paymentEntity?.id || `WH-${Date.now()}`);
                     (0, databaseService_1.savePayment)(job.jobCode, job.pricing.totalPrice, 'razorpay_webhook', paymentEntity?.id || `WH-${Date.now()}`);
+                    if (paidJob) {
+                        paymentService_1.PaymentService.triggerPrintExecution(paidJob);
+                    }
                 }
             }
         }
@@ -164,39 +188,4 @@ router.post('/webhook', (req, res) => {
         return res.status(200).json({ status: 'error_handled' });
     }
 });
-/**
- * Simulate printer progress with TRACKED timers (clearable on shutdown)
- */
-function simulatePrintingFlow(jobCode) {
-    const t1 = setTimeout(() => {
-        jobService_1.JobService.updateStatus(jobCode, 'sending_to_machine', 'Sending file to the machine…');
-    }, 1200);
-    jobService_1.JobService.trackSimulationTimer(jobCode, t1);
-    const t2 = setTimeout(() => {
-        const job = jobService_1.JobService.getJob(jobCode);
-        if (!job || job.status === 'completed' || job.status === 'failed')
-            return;
-        const totalSheets = job.totalPhysicalPages || 1;
-        jobService_1.JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', 0);
-        let current = 0;
-        const intervalTime = Math.max(100, Math.floor(3000 / totalSheets));
-        const interval = setInterval(() => {
-            current++;
-            const currentJob = jobService_1.JobService.getJob(jobCode);
-            if (!currentJob || currentJob.status === 'completed' || currentJob.status === 'failed') {
-                clearInterval(interval);
-                return;
-            }
-            jobService_1.JobService.updateStatus(jobCode, 'printing', 'Printing your pages…', current);
-            if (current >= totalSheets) {
-                clearInterval(interval);
-                const t3 = setTimeout(() => {
-                    jobService_1.JobService.updateStatus(jobCode, 'completed', 'Ready in the tray! Grab your pages', totalSheets);
-                }, 800);
-                jobService_1.JobService.trackSimulationTimer(jobCode, t3);
-            }
-        }, intervalTime);
-    }, 2600);
-    jobService_1.JobService.trackSimulationTimer(jobCode, t2);
-}
 exports.default = router;
