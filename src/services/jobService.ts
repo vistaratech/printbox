@@ -110,7 +110,9 @@ export class JobService {
 
   public static getNextQueuedJob(machineId: string): PrintJob | undefined {
     const jobs = loadAllJobs(100, 0);
-    return jobs.find(j => j.machineId === machineId && (j.status === 'payment_received' || j.status === 'queued'));
+    const exact = jobs.find(j => j.machineId === machineId && (j.status === 'payment_received' || j.status === 'queued'));
+    if (exact) return exact;
+    return jobs.find(j => (j.machineId === 'M-01' || !j.machineId) && (j.status === 'payment_received' || j.status === 'queued'));
   }
 
   public static markPaid(jobCode: string, paymentId?: string): PrintJob | undefined {

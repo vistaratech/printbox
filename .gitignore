@@ -10,3 +10,10 @@ bin/
 *.db
 *.db-shm
 *.db-wal
+release/
+scratch/
+temp_prints/
+config.json
+dist/desktop/
+dist/desktopBundle/
+dist/bundle/

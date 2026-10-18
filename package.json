@@ -9,7 +9,11 @@
     "start": "node dist/server.js",
     "kiosk:mock": "tsx src/kiosk/mockKiosk.ts",
     "kiosk:real": "tsx src/kiosk/realKiosk.ts",
-    "tunnel": "bin\\cloudflared.exe tunnel --url http://localhost:3000"
+    "tunnel": "bin\\cloudflared.exe tunnel --url http://localhost:3000",
+    "desktop:dev": "tsx src/desktop/desktopAgent.ts",
+    "desktop:build": "powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1",
+    "desktop:installer": "powershell -ExecutionPolicy Bypass -File scripts/create-installer.ps1",
+    "desktop:full": "npm run desktop:build && npm run desktop:installer"
   },
   "repository": {
     "type": "git",
@@ -44,7 +48,11 @@
     "@types/multer": "^2.3.0",
     "@types/node": "^26.6.5",
     "@types/nodemailer": "^8.0.2",
+    "electron": "^44.9.0",
+    "node-loader": "^2.1.0",
     "tsx": "^4.23.15",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.2",
+    "webpack": "^5.112.0",
+    "webpack-cli": "^7.2.3"
   }
 }

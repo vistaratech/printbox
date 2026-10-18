@@ -4416,6 +4416,13 @@
     let storedApi = localStorage.getItem('pb_api');
     if (storedApi && storedApi.includes('vercel.app')) { localStorage.removeItem('pb_api'); storedApi = null; }
     if (_p.get('api')) { storedApi = _p.get('api').replace(/\/+$/, ''); localStorage.setItem('pb_api', storedApi); }
+    let storedMachine = localStorage.getItem('pb_machine_id');
+    const urlMachine = _p.get('machine') || _p.get('m');
+    if (urlMachine) {
+      storedMachine = urlMachine.trim();
+      localStorage.setItem('pb_machine_id', storedMachine);
+    }
+    const CURRENT_MACHINE_ID = storedMachine || 'ANNA-XEROX-01';
     const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
     const API_BASE = (isLocal && !storedApi)
       ? (window.location.origin + '/api')
@@ -5245,7 +5252,7 @@
               collate: S.collate,
               pageList: S.pl || undefined
             },
-            machineId: 'M-01',
+            machineId: CURRENT_MACHINE_ID,
             paymentMethod: S.pay
           })
         });

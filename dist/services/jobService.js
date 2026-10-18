@@ -118,7 +118,10 @@ class JobService {
     static getAllJobs(limit = 50, offset = 0) { return (0, databaseService_1.loadAllJobs)(limit, offset); }
     static getNextQueuedJob(machineId) {
         const jobs = (0, databaseService_1.loadAllJobs)(100, 0);
-        return jobs.find(j => j.machineId === machineId && (j.status === 'payment_received' || j.status === 'queued'));
+        const exact = jobs.find(j => j.machineId === machineId && (j.status === 'payment_received' || j.status === 'queued'));
+        if (exact)
+            return exact;
+        return jobs.find(j => (j.machineId === 'M-01' || !j.machineId) && (j.status === 'payment_received' || j.status === 'queued'));
     }
     static markPaid(jobCode, paymentId) {
         const job = (0, databaseService_1.loadJob)(jobCode.toUpperCase());

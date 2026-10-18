@@ -486,11 +486,20 @@
       });
     }
 
+    const _params = new URLSearchParams(window.location.search);
+    const machineId = _params.get('machine') || _params.get('m') || 'ANNA-XEROX-01';
+    const badgeEl = document.querySelector('.brand-badge');
+    if (badgeEl) {
+      badgeEl.innerHTML = `<span class="dot"></span> Self-Service Machine ${machineId}`;
+    }
+
     const input = document.getElementById('urlInput');
+    const defaultUrl = `${window.location.origin}/?machine=${encodeURIComponent(machineId)}`;
+    input.value = defaultUrl;
     generateQr(input.value);
 
     input.addEventListener('input', (e) => {
-      const val = e.target.value.trim() || window.location.origin;
+      const val = e.target.value.trim() || defaultUrl;
       generateQr(val);
     });
   </script>
