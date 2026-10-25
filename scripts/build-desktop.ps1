@@ -28,7 +28,7 @@ Write-Host "  TypeScript compiled to dist/" -ForegroundColor Green
 # Step 2: Bundle with webpack
 Write-Host "[2/5] Bundling with webpack..." -ForegroundColor Yellow
 Push-Location $ProjectRoot
-npx webpack --config webpack.desktop.config.js
+npx webpack --config scripts/webpack.desktop.config.js
 if ($LASTEXITCODE -ne 0) {
     Write-Host "Webpack bundling failed!" -ForegroundColor Red
     Pop-Location
@@ -37,10 +37,15 @@ if ($LASTEXITCODE -ne 0) {
 Pop-Location
 Write-Host "  agent.js bundled" -ForegroundColor Green
 
-# Step 3: Copy dashboard HTML
+# Step 3: Copy dashboard HTML and config
 Write-Host "[3/5] Copying dashboard files..." -ForegroundColor Yellow
-Copy-Item (Join-Path $ProjectRoot "src\desktop\dashboard.html") (Join-Path $ReleaseDir "dashboard.html") -Force
+Copy-Item (Join-Path $ProjectRoot "src\agents\desktop\dashboard.html") (Join-Path $ReleaseDir "dashboard.html") -Force
 Write-Host "  dashboard.html copied" -ForegroundColor Green
+$rootConfig = Join-Path $ProjectRoot "config.json"
+if (Test-Path $rootConfig) {
+    Copy-Item $rootConfig (Join-Path $ReleaseDir "config.json") -Force
+    Write-Host "  config.json synced" -ForegroundColor Green
+}
 
 # Step 4: Ensure node.exe exists
 Write-Host "[4/5] Checking node.exe..." -ForegroundColor Yellow

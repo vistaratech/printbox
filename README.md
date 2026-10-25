@@ -19,11 +19,23 @@ npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser!
 
-### 3. (Optional) Run the Raspberry Pi Kiosk Simulator
-To simulate the physical vending machine / printer hardware polling and printing jobs:
-```bash
-npm run kiosk:mock
-```
+### 3. Print Agents (Choose your hardware setup)
+* **Desktop Agent (Windows GUI):**
+  ```bash
+  npm run desktop:dev
+  ```
+* **Real Hardware Kiosk (Windows / USB / Wi-Fi):**
+  ```bash
+  npm run kiosk:real
+  ```
+* **Raspberry Pi Kiosk (Linux / CUPS):**
+  ```bash
+  npm run kiosk:pi
+  ```
+* **Mock Simulator (Dev without physical printer):**
+  ```bash
+  npm run kiosk:mock
+  ```
 
 ### 4. Build for Production
 ```bash

@@ -7,7 +7,7 @@ exports.PdfProcessorService = void 0;
 const fs_1 = __importDefault(require("fs"));
 const path_1 = __importDefault(require("path"));
 const pdf_lib_1 = require("pdf-lib");
-const config_1 = require("../config");
+const config_1 = require("../../config");
 class PdfProcessorService {
     static processedDir = path_1.default.join(config_1.config.uploadDir, 'processed');
     static ensureProcessedDir() {

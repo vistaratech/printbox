@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs';
 import { execSync } from 'child_process';
-import { config } from '../config';
+import { config } from '../../config';
 
 /**
  * PrintBox Raspberry Pi Kiosk Agent
@@ -15,7 +15,7 @@ import { config } from '../config';
  *   - Printer added via CUPS web UI (http://localhost:631) or lpadmin
  *
  * Usage:
- *   npx tsx src/kiosk/piKiosk.ts
+ *   npx tsx src/agents/kiosk-pi/piKiosk.ts
  *   # or
  *   npm run kiosk:pi
  */

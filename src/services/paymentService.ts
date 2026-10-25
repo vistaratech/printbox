@@ -1,7 +1,7 @@
 import { JobService } from './jobService';
 import { savePayment } from './databaseService';
-import { PdfProcessorService } from './pdfProcessorService';
-import { EpsonPrintService } from './epsonPrintService';
+import { PdfProcessorService } from './print/pdfProcessorService';
+import { EpsonPrintService } from './print/epsonCloudService';
 import { MachineService } from './machineService';
 import { PrintJob } from '../types';
 

@@ -6,7 +6,7 @@ import { config } from '../config';
 import fs from 'fs';
 import { PrintOptions, UploadedFileInfo } from '../types';
 import { PaymentService } from '../services/paymentService';
-import { PdfProcessorService } from '../services/pdfProcessorService';
+import { PdfProcessorService } from '../services/print/pdfProcessorService';
 
 const router = Router();
 

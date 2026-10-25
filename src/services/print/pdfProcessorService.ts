@@ -1,8 +1,8 @@
 import fs from 'fs';
 import path from 'path';
 import { PDFDocument, degrees } from 'pdf-lib';
-import { PrintOptions } from '../types';
-import { config } from '../config';
+import { PrintOptions } from '../../types';
+import { config } from '../../config';
 
 export class PdfProcessorService {
   private static processedDir = path.join(config.uploadDir, 'processed');

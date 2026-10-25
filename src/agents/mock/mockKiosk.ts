@@ -1,4 +1,4 @@
-import { config } from '../config';
+import { config } from '../../config';
 
 const API_BASE = `http://localhost:${config.port}/api`;
 const MACHINE_ID = config.defaultMachineId;
@@ -38,7 +38,7 @@ async function pollJobs() {
 
 async function processJob(job: any) {
   console.log(`\n======================================================`);
-  console.log(`🖨️  [Raspberry Pi Kiosk] Processing Job: ${job.jobCode}`);
+  console.log(`🖨️  [Mock Kiosk Simulator] Processing Job: ${job.jobCode}`);
   console.log(`📄 File: ${job.file.originalName} (${job.file.fileSize} bytes)`);
   console.log(`⚙️  Settings: ${job.options.color.toUpperCase()} | ${job.options.sides} | ${job.options.size}`);
   console.log(`📑 Total physical sheets to feed: ${job.totalPhysicalPages}`);
@@ -69,7 +69,7 @@ async function processJob(job: any) {
 }
 
 async function main() {
-  console.log(`🤖 PrintBox Raspberry Pi Kiosk Agent started for Machine: ${MACHINE_ID}`);
+  console.log(`🤖 PrintBox Mock Kiosk (Dev Simulator) started for Machine: ${MACHINE_ID}`);
   console.log(`📡 Polling endpoint: ${API_BASE}/kiosk/${MACHINE_ID}/poll\n`);
 
   // Initial heartbeat

@@ -1,7 +1,7 @@
 import path from 'path';
 import nodemailer from 'nodemailer';
-import { PrintJob } from '../types';
-import { config } from '../config';
+import { PrintJob } from '../../types';
+import { config } from '../../config';
 
 export interface PrintDispatchResult {
   success: boolean;
@@ -96,3 +96,6 @@ export class EpsonPrintService {
     }
   }
 }
+
+export { EpsonPrintService as EpsonCloudService };
+

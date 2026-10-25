@@ -17,3 +17,4 @@ config.json
 dist/desktop/
 dist/desktopBundle/
 dist/bundle/
+.pi_state.json

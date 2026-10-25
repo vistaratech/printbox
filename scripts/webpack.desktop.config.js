@@ -1,10 +1,10 @@
 const path = require('path');
 
 module.exports = {
-  entry: './dist/desktop/desktopAgent.js',
+  entry: './dist/agents/desktop/desktopAgent.js',
   output: {
     filename: 'agent.js',
-    path: path.resolve(__dirname, 'release', 'PrintBox-Setup'),
+    path: path.resolve(__dirname, '..', 'release', 'PrintBox-Setup'),
   },
   target: 'node',
   mode: 'production',

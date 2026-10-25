@@ -10,7 +10,7 @@ const sseService_1 = require("../services/sseService");
 const config_1 = require("../config");
 const fs_1 = __importDefault(require("fs"));
 const paymentService_1 = require("../services/paymentService");
-const pdfProcessorService_1 = require("../services/pdfProcessorService");
+const pdfProcessorService_1 = require("../services/print/pdfProcessorService");
 const router = (0, express_1.Router)();
 /**
  * POST /api/jobs

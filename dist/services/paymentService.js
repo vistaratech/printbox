@@ -3,8 +3,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.PaymentService = void 0;
 const jobService_1 = require("./jobService");
 const databaseService_1 = require("./databaseService");
-const pdfProcessorService_1 = require("./pdfProcessorService");
-const epsonPrintService_1 = require("./epsonPrintService");
+const pdfProcessorService_1 = require("./print/pdfProcessorService");
+const epsonCloudService_1 = require("./print/epsonCloudService");
 const machineService_1 = require("./machineService");
 class PaymentService {
     static orderMap = new Map(); // jobCode -> razorpayOrderId
@@ -103,7 +103,7 @@ class PaymentService {
             jobService_1.JobService.updateStatus(jobCode, 'sending_to_machine', 'Preparing document for printing…');
             const printReadyPath = await pdfProcessorService_1.PdfProcessorService.processForPrinting(job.file.filePath, job.options, job.jobCode);
             jobService_1.JobService.updateStatus(jobCode, 'sending_to_machine', 'Dispatching to Epson Printer…');
-            const dispatchResult = await epsonPrintService_1.EpsonPrintService.sendPrintJob(job, printReadyPath);
+            const dispatchResult = await epsonCloudService_1.EpsonPrintService.sendPrintJob(job, printReadyPath);
             if (dispatchResult.success) {
                 console.log(`[PrintExecution] 🚀 Dispatched job #${jobCode} via mode: ${dispatchResult.mode}`);
             }

@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs';
-import { config } from '../config';
+import { config } from '../../config';
 const ptp = require('pdf-to-printer');
 import { execSync } from 'child_process';
 

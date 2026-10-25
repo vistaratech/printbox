@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0\.."
 title PrintBox Windows Hardware Agent
 color 0A
 echo ====================================================

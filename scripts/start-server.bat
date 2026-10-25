@@ -1,4 +1,5 @@
 @echo off
+cd /d "%~dp0\.."
 title PrintBox Backend Server
 color 0B
 echo ====================================================
