@@ -9,6 +9,7 @@
     "start": "node dist/server.js",
     "kiosk:mock": "tsx src/kiosk/mockKiosk.ts",
     "kiosk:real": "tsx src/kiosk/realKiosk.ts",
+    "kiosk:pi": "tsx src/kiosk/piKiosk.ts",
     "tunnel": "bin\\cloudflared.exe tunnel --url http://localhost:3000",
     "desktop:dev": "tsx src/desktop/desktopAgent.ts",
     "desktop:build": "powershell -ExecutionPolicy Bypass -File scripts/build-desktop.ps1",
